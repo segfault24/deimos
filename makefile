@@ -4,9 +4,10 @@ ARCH=i386
 
 ARCHDIR=arch/$(ARCH)
 
+# compiler and linker locations & options
 AR=/home/austin/opt/cross/bin/i686-elf-ar
 CC=/home/austin/opt/cross/bin/i686-elf-gcc
-CFLAGS=-ffreestanding -fbuiltin -Wall -Wextra -I$(CINC) -I$(KINC)
+CFLAGS=-ffreestanding -fbuiltin -Wall -Werror -Wextra -I$(CINC) -I$(KINC)
 LDFLAGS=-nostdlib
 
 # include directories
@@ -22,8 +23,8 @@ include kernel/make.config
 #ALLOBJS
 ALLOBJS=$(DLIBCOBJS) $(ARCHOBJS) $(KERNELOBJS)
 
-# decoy (dont auto make everything)
-decoy:
+# default target (see below)
+_all: all
 
 # compile dlibc
 dlibc.a: $(DLIBCOBJS)
@@ -33,7 +34,7 @@ dlibc.a: $(DLIBCOBJS)
 deimos.bin: $(ALLOBJS) dlibc.a $(ARCHDIR)/kernel.lnk
 	$(CC) -T $(ARCHDIR)/kernel.lnk -o $@ $(ALLOBJS) dlibc.a $(CFLAGS) $(LDFLAGS)
 
-# global compile rules
+# generic compile rules
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
 
@@ -44,15 +45,17 @@ deimos.bin: $(ALLOBJS) dlibc.a $(ARCHDIR)/kernel.lnk
 deimos.iso: deimos.bin
 	mkdir -p isodir/boot/grub
 	cp $< isodir/boot/$<
-	echo menuentry "deimos" {	>> isodir/boot/grub/grub.cfg
-	echo multiboot /boot/$<		>> isodir/boot/grub/grub.cfg
-	echo }						>> isodir/boot/grub/grub.cfg
+	echo menuentry "deimos" { >> isodir/boot/grub/grub.cfg
+	echo multiboot /boot/$< >> isodir/boot/grub/grub.cfg
+	echo } >> isodir/boot/grub/grub.cfg
 	grub-mkrescue -o $@ isodir
 	rm -rf isodir
 
-# utility & housekeeping
-all: dlibc.a deimos.bin
+# actual targets
+all: dlibc kernel iso
 
+dlibc: dlibc.a
+kernel: deimos.bin
 iso: deimos.iso
 
 run:

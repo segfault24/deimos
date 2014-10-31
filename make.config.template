@@ -1,0 +1,12 @@
+# get subdirs
+# execute make.config in each subdir
+
+# find all .c files
+# translate to .o files
+# add .o files to dlibcobjs
+TSRCS=$(wildcard dlibc/string/*.c)
+TOBJS=$(patsubst %.c,%.o,$(SRCS))
+DLIBCOBJS:=$(DLIBCOBJS) $(TOBJS)
+include dlibc/stdlib/make.config
+include dlibc/stdio/make.config
+include dlibc/string/make.config
