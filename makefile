@@ -20,8 +20,8 @@ include dlibc/make.config
 include $(ARCHDIR)/make.config
 #KERNELOBJS
 include kernel/make.config
-#ALLOBJS
-ALLOBJS=$(DLIBCOBJS) $(ARCHOBJS) $(KERNELOBJS)
+#OSOBJS
+OSOBJS=$(ARCHOBJS) $(KERNELOBJS)
 
 # default target (see below)
 _all: all
@@ -31,8 +31,8 @@ dlibc.a: $(DLIBCOBJS)
 	$(AR) rcs $@ $(DLIBCOBJS)
 
 # compile kernel
-deimos.bin: $(ALLOBJS) dlibc.a $(ARCHDIR)/kernel.lnk
-	$(CC) -T $(ARCHDIR)/kernel.lnk -o $@ $(ALLOBJS) dlibc.a $(CFLAGS) $(LDFLAGS)
+deimos.bin: $(OSOBJS) dlibc.a $(ARCHDIR)/kernel.lnk
+	$(CC) -T $(ARCHDIR)/kernel.lnk -o $@ $(OSOBJS) dlibc.a $(CFLAGS) $(LDFLAGS)
 
 # generic compile rules
 %.o: %.c
@@ -52,8 +52,7 @@ deimos.iso: deimos.bin
 	rm -rf isodir
 
 # actual targets
-all: dlibc kernel iso
-
+all: dlibc kernel
 dlibc: dlibc.a
 kernel: deimos.bin
 iso: deimos.iso
