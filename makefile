@@ -7,11 +7,12 @@ ARCHDIR=arch/$(ARCH)
 # compiler and linker locations & options
 AR=/home/austin/opt/cross/bin/i686-elf-ar
 CC=/home/austin/opt/cross/bin/i686-elf-gcc
-CFLAGS=-ffreestanding -fbuiltin -Wall -Werror -Wextra -I$(CINC) -I$(KINC)
-LDFLAGS=-nostdlib
+CFLAGS=-g -ffreestanding -fbuiltin -Wall -Werror -Wextra -I$(CINC) -I$(KINC) -I$(AINC)
+LDFLAGS=-nostdlib -lgcc
 
 # include directories
 CINC=dlibc/include
+AINC=$(ARCHDIR)/include
 KINC=kernel/include
 
 #DLIBCOBJS

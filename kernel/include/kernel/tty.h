@@ -22,7 +22,8 @@
 #define VGA_LIGHT_BROWN 14
 #define VGA_WHTIE 15
 
-#define VGA_BASE_ADDR 0x0B8000
+#define VGA_BASE_ADDR 0xB8000
+#define VGA_INDEX_REG 0x3D4
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
