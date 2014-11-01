@@ -1,21 +1,33 @@
+#include <stddef.h>
+#include <stdint.h>
+#include <i386/ioasm.h>
 #include <kernel/tty.h>
+
+/* internal variables and functions */
 
 uint16_t* term_buf;
 uint8_t term_color;
 
-size_t term_row;
-size_t term_col;
+uint16_t term_row;
+uint16_t term_col;
 
-void term_setcolor(uint8_t bg, uint8_t fg)
+void term_updatecursor()
 {
-    term_color = fg | bg<<4;
+	uint16_t tmp;
+	tmp = term_row*VGA_WIDTH+term_col;
+	outb(VGA_INDEX_REG, 14);
+	outb(VGA_INDEX_REG+1, (uint8_t)((tmp>>8)&0xFF));
+	outb(VGA_INDEX_REG, 15);
+	outb(VGA_INDEX_REG+1, (uint8_t)(tmp&0xFF));
 }
 
-void term_putchar(char c)
+// doesn't update cursor so that we don't waste
+// time updating it while writing a string
+void term_putchar_t(char c)
 {
     if(c != '\n')
     {
-        term_buf[term_row*VGA_HEIGHT+term_col] = term_color<<8 | c;
+        term_buf[term_row*VGA_HEIGHT+term_col] = term_color | c;
         term_col++;
     } else {
         term_row++;
@@ -33,6 +45,19 @@ void term_putchar(char c)
     }
 }
 
+/* library implementations */
+
+void term_setcolor(uint8_t bg, uint8_t fg)
+{
+    term_color = (fg | bg<<4) << 8;
+}
+
+void term_putchar(char c)
+{
+	term_putchar_t(c);
+	term_updatecursor();
+}
+
 void term_puts(const char* str)
 {
     size_t i;
@@ -40,7 +65,8 @@ void term_puts(const char* str)
 
     len = strlen(str);
     for(i=0; i<len; i++)
-        term_putchar(str[i]);
+        term_putchar_t(str[i]);
+	term_updatecursor();
 }
 
 void term_scroll()
@@ -66,7 +92,7 @@ void term_clear()
 	size_t i;
 
 	for(i=0; i<VGA_HEIGHT*VGA_WIDTH; i++)
-		term_putchar(' ');
+		term_putchar_t(' ');
 }
 
 void term_init()
