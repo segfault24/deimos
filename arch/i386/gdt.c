@@ -1,6 +1,6 @@
 #include <i386/gdt.h>
 
-gdt_entry create_gdt_entry(uint32_t base, uint32_t limit, uint16_t flags)
+gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
 {
 	uint64_t desc;
 
@@ -27,12 +27,12 @@ void gdt_init()
 	gptr.offset = (uint32_t)&gdt;
 
 	// null descriptor
-	gdt[0] = create_gdt_entry(0, 0, 0);
+	gdt[0] = gdt_create_entry(0, 0, 0);
 	// code segment
-	gdt[1] = create_gdt_entry(0, 0xFFFFFFFF, GDT_KERNEL_CODE);
+	gdt[1] = gdt_create_entry(0, 0xFFFFFFFF, GDT_KERNEL_CODE);
 	// data degment
-	gdt[2] = create_gdt_entry(0, 0xFFFFFFFF, GDT_KERNEL_DATA);
+	gdt[2] = gdt_create_entry(0, 0xFFFFFFFF, GDT_KERNEL_DATA);
 
-	// call asm function to perform actual load
+	// call our asm function to perform actual load
 	gdt_load();
 }

@@ -1,5 +1,5 @@
-#ifndef GDT_H
-#define GDT_H
+#ifndef I386_GDT_H
+#define I386_GDT_H
 
 #include <stdint.h>
 
@@ -47,10 +47,13 @@ typedef struct
 gdt_entry gdt[GDT_NUM_ENTRIES];
 gdt_ptr gptr;
 
-gdt_entry create_gdt_entry(uint32_t base, uint32_t limit, uint16_t flags);
+// creates a gdt entry
+gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags);
 
+// sets up the table
 void gdt_init();
 
+// calls the lgdt asm instruction
 extern void gdt_load();
 
 #endif
