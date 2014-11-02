@@ -1,7 +1,12 @@
-#ifndef ARCH_I386_IOASM_H
-#define ARCH_I386_IOASM_H
+#ifndef I386_IOASM_H
+#define I386_IOASM_H
 
 #include <stdint.h>
+
+static inline void iowait()
+{
+	__asm__ volatile ( "jmp 1" "1:jmp 2" "2:" );
+}
 
 static inline void outb(uint16_t port, uint8_t val)
 {
@@ -22,4 +27,3 @@ static inline uint8_t inb(uint16_t port)
 //static inline uint32_t inl(uint16_t port);
 
 #endif
-
