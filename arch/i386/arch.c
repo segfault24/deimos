@@ -2,7 +2,10 @@
 #include <i386/gdt.h>
 #include <i386/idt.h>
 #include <i386/pic.h>
+#include <i386/isr.h>
 #include <i386/directasm.h>
+
+#include <kernel/tty.h>
 
 // Assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
@@ -21,14 +24,31 @@
 //  | +-TRAPS (3-4)
 //  | +-ABORTS (8,18)
 //  | +-(RESERVED) (15,21-31)
-//  +-IRQS (map to 32-47)
+//  +-IRQS (mapped to 32-47)
 //  +-SOFTWARE
-
 
 void arch_init()
 {
+	// initialization MUST be done in this order:
+	// GDT -> IDT -> PIC -> ISR
+
+	disable_interrupts();
+
+	term_puts("gdt init...\n");
 	gdt_init();
+	term_puts("gdt done\n");
+
+	term_puts("idt init...\n");
 	idt_init();
+	term_puts("idt done\n");
+
+	term_puts("pic init...\n");
 	pic_init();
+	term_puts("pic done\n");
+
+	term_puts("isr init...\n");
+	isr_init();
+	term_puts("isr done\n");
+
 	enable_interrupts();
 }
