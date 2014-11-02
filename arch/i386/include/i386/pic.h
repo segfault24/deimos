@@ -21,9 +21,9 @@
 #define PIC_MASTER_CSCD 0x04
 #define PIC_SLAVE_CSCD 0x02
 
-// enable all IRQs (because whynot)
-#define PIC_MASTER_MASK 0x00
-#define PIC_SLAVE_MASK 0x00
+// mask all IRQs by default
+#define PIC_MASTER_MASK 0xFF
+#define PIC_SLAVE_MASK 0xFF
 
 // APIC functions
 // extern void pic_apic_present();
@@ -32,6 +32,10 @@
 // initializes the PICs and then remaps
 // the IRQs so we don't hide CPU exceptions
 void pic_init();
+
+// sets the masks on the individual IRQ lines
+void pic_mask_irq(uint8_t irq);
+void pic_unmask_irq(uint8_t irq);
 
 // tell the PICs we're done
 void pic_send_eoi(uint8_t irq);

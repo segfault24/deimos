@@ -5,7 +5,8 @@ gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
 	uint64_t desc;
 
 	// upper half
-	desc  = base         & 0xFF000000; // base 24:31
+	desc = 0;
+	desc |= base         & 0xFF000000; // base 24:31
 	desc |= flags<<8     & 0x00F00000; // flags
 	desc |= limit        & 0x000F0000; // limit 16:19
 	desc |= flags<<8     & 0x0000FF00; // access
