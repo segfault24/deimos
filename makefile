@@ -24,7 +24,7 @@ include kernel/make.config
 #OSOBJS
 OSOBJS=$(ARCHOBJS) $(KERNELOBJS)
 
-# default target (see below)
+# dummy default target (see below)
 _all: all
 
 # compile dlibc
@@ -58,11 +58,11 @@ dlibc: dlibc.a
 kernel: deimos.bin
 iso: deimos.iso
 
-run:
-	#qemu -cdrom demios.iso
+run: iso
+	qemu -cdrom deimos.iso
 
 clean:
 	rm -f *.o */*.o */*/*.o dlibc.a deimos.bin deimos.iso
 
-.PHONY: all iso run clean
+.PHONY: all dlibc kernel iso run clean
 

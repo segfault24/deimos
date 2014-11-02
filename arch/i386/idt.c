@@ -5,10 +5,11 @@
 idt_entry idt_create_entry(uint16_t selector, uint32_t offset, uint8_t flags)
 {
 	uint64_t desc;
+	desc = 0;
 
 	// upper half
-	desc  = offset       & 0xFFFF0000; // offset 16:31
-	desc |= flags        & 0x0000FF00; // flags
+	desc |= offset       & 0xFFFF0000; // offset 16:31
+	desc |= flags<<8     & 0x0000FF00; // flags
 
 	// shift to access lower half
 	desc = desc<<32;

@@ -15,15 +15,12 @@
 
 void kmain()
 {
-	size_t i;
-
-	arch_init();
     term_init();
-
-    for(i=0; i<10; i++)
-    {
-        term_puts("does it work? ");
-    }
-    term_scroll();
+	term_puts("term init...\n");
+	term_puts("term done\n");
+	term_puts("arch init...\n");
+	arch_init();
+	term_puts("arch done\n");
+	// __asm__ volatile ( "int $33" );
+	while(1);
 }
-
