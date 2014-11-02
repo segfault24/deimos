@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include <stddef.h>
 #include <i386/idt.h>
 
 idt_entry idt_create_entry(uint16_t selector, uint32_t offset, uint8_t flags)

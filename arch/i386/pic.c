@@ -18,13 +18,23 @@ void pic_init()
 	// set to 8086 mode
 	outb(PIC_MASTER_DATA, PIC_8086);
 	outb(PIC_SLAVE_DATA, PIC_8086);
+
+	// set the interrupt mask
+	outb(PIC_MASTER_DATA, PIC_MASTER_MASK);
+	outb(PIC_SLAVE_DATA, PIC_SLAVE_MASK);
 }
 
-void pic_send_eoi()
+void pic_send_eoi(uint8_t irq)
 {
-	if(/*slave pic irq*/)
+	if(irq >= 8)
 	{
+		outb(PIC_SLAVE_CMD, PIC_EOI);
 	}
-	outb();
+	outb(PIC_MASTER_CMD, PIC_EOI);
 }
 
+/*void pic_disable()
+{
+	outb(PIC_MASTER_DATA, PIC_DISABLE);
+	outb(PIC_SLAVE_DATA, PIC_DISABLE);
+}*/
