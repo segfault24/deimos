@@ -1,5 +1,5 @@
-#ifndef TTY_H
-#define TTY_H
+#ifndef KERNEL_TTY_H
+#define KERNEL_TTY_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -22,14 +22,15 @@
 #define VGA_LIGHT_BROWN 14
 #define VGA_WHTIE 15
 
-#define VGA_BASE_ADDR 0xB8000
-#define VGA_INDEX_REG 0x3D4
+#define VGA_BASE_ADDR 0x000B8000
+#define VGA_INDEX_REG 0x03D4
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
 void term_setcolor(uint8_t bg, uint8_t fg);
 void term_putchar(char c);
 void term_puts(const char* str);
+void term_puti(uint32_t i);
 void term_scroll();
 void term_clear();
 void term_init();
