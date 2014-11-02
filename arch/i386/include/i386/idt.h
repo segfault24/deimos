@@ -1,5 +1,5 @@
-#ifndef IDT_H
-#define IDT_H
+#ifndef I386_IDT_H
+#define I386_IDT_H
 
 #include <stdint.h>
 
@@ -47,10 +47,18 @@ typedef struct
 idt_entry idt[IDT_NUM_ENTRIES];
 idt_ptr iptr;
 
-idt_entry create_idt_entry(uint16_t selector, uint32_t offset, uint8_t flags);
+// creates an idt entry
+idt_entry idt_create_entry(uint16_t selector, uint32_t offset, uint8_t flags);
 
+// registers an isr in the idt
+// here for convenience mostly
+idt_register_isr(uint8_t interrupt, uint32_t func_ptr);
+
+// sets up the table
+// this does not register any ISRs
 void idt_init();
 
+// calls the lidt asm instruction
 extern void idt_load();
 
 #endif
