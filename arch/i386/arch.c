@@ -2,6 +2,7 @@
 #include <i386/gdt.h>
 #include <i386/idt.h>
 #include <i386/pic.h>
+#include <i386/directasm.h>
 
 // Assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
@@ -29,4 +30,5 @@ void arch_init()
 	gdt_init();
 	idt_init();
 	pic_init();
+	enable_interrupts();
 }
