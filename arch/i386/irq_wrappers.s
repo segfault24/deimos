@@ -22,6 +22,15 @@
 #       segment descriptor before calling
 #       the common handler?
 
+irq0w: # programmable interrupt timer
+	pushal
+	pushl $0 # dummy
+	pushl $0
+	call irq_handler
+	addl $8, %esp
+	popal
+	iret
+
 irq1w: # keyboard interrupt
 	pushal
 	pushl $0 # dummy

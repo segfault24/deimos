@@ -13,6 +13,9 @@
 #define PIC_8086 0x01
 #define PIC_EOI  0x20
 
+#define PIC_REG_IRR 0x0A
+#define PIC_REG_ISR 0x0B
+
 // maps IRQs 0-7 to interrupts 32-39
 #define PIC_MASTER_OFFSET 0x20
 // maps IRQs 8-15 to interrupts 40-47
@@ -36,6 +39,11 @@ void pic_init();
 // sets the masks on the individual IRQ lines
 void pic_mask_irq(uint8_t irq);
 void pic_unmask_irq(uint8_t irq);
+uint8_t pic_read_mask();
+
+// allows us to read the PICs' internal in-service
+// and interrupt request registers
+uint16_t pic_read_reg(uint8_t pic_reg);
 
 // tell the PICs we're done
 void pic_send_eoi(uint8_t irq);

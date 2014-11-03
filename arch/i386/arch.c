@@ -4,6 +4,7 @@
 #include <i386/isr.h>
 #include <i386/pic.h>
 #include <i386/irq.h>
+#include <i386/pit.h>
 #include <i386/directasm.h>
 
 #include <kernel/tty.h>
@@ -30,30 +31,17 @@
 
 void arch_init()
 {
-	// initialization MUST be done in this order
-	// GDT -> IDT -> ISR -> PIC -> IRQ
+	// initialization MUST be done in these sequences
+	// GDT -> IDT -> ISR -> PIC -> IRQ -> PIT
 
 	disable_interrupts(); // just to be sure
 
-	term_puts("gdt init...\n");
 	gdt_init();
-	term_puts("gdt done\n");
-
-	term_puts("idt init...\n");
 	idt_init();
-	term_puts("idt done\n");
-
-	term_puts("pic init...\n");
 	pic_init();
-	term_puts("pic done\n");
-
-	term_puts("isr init...\n");
 	isr_init();
-	term_puts("isr done\n");
-
-	term_puts("irq init...\n");
 	irq_init();
-	term_puts("irq done\n");
+	pit_init();
 
 	enable_interrupts();
 }
