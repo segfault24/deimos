@@ -22,7 +22,7 @@ extern void irq14w(); // primary ATA hard disk
 extern void irq15w(); // secondary ATA hard disk
 
 // actual interrupt handling goes here
-void irq_handler(uint8_t irq);
+void irq_handler(uint8_t irq, uint32_t error);
 
 // initializes and registers IRQs with the IDT
 void irq_init();
