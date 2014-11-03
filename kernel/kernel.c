@@ -21,6 +21,6 @@ void kmain()
 	term_puts("arch init...\n");
 	arch_init();
 	term_puts("arch done\n");
-	// __asm__ volatile ( "int $33" );
-	while(1);
+
+	for(;;);
 }
