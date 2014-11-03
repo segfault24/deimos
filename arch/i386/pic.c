@@ -6,22 +6,27 @@ void pic_init()
 	// start the initialization sequence
 	outb(PIC_MASTER_CMD,  PIC_INIT);
 	outb(PIC_SLAVE_CMD,   PIC_INIT);
+	iowait();
 
 	// set the new vector offset
 	outb(PIC_MASTER_DATA, PIC_MASTER_OFFSET);
 	outb(PIC_SLAVE_DATA,  PIC_SLAVE_OFFSET);
+	iowait();
 
 	// tell the PICs how they are cascaded
 	outb(PIC_MASTER_DATA, PIC_MASTER_CSCD);
 	outb(PIC_SLAVE_DATA,  PIC_SLAVE_CSCD);
+	iowait();
 
 	// set to 8086 mode
 	outb(PIC_MASTER_DATA, PIC_8086);
 	outb(PIC_SLAVE_DATA, PIC_8086);
+	iowait();
 
 	// set the interrupt mask
 	outb(PIC_MASTER_DATA, PIC_MASTER_MASK);
 	outb(PIC_SLAVE_DATA, PIC_SLAVE_MASK);
+	iowait();
 
 	// make sure IRQ 2 is enabled, so that the
 	// slave PIC can talk to the master PIC
@@ -67,6 +72,18 @@ void pic_unmask_irq(uint8_t irq)
 	mask = mask & ~(1<<irq);
 	// write out the new mask
 	outb(port, mask);
+}
+
+uint8_t pic_read_mask()
+{
+	return (inb(PIC_SLAVE_DATA) << 8) | inb(PIC_MASTER_DATA);
+}
+
+uint16_t pic_read_reg(uint8_t pic_reg)
+{
+	outb(PIC_MASTER_CMD, pic_reg);
+	outb(PIC_SLAVE_CMD, pic_reg);
+	return (inb(PIC_SLAVE_CMD) << 8) | inb(PIC_MASTER_CMD);
 }
 
 void pic_send_eoi(uint8_t irq)

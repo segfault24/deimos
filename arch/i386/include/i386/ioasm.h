@@ -5,7 +5,7 @@
 
 static inline void iowait()
 {
-	__asm__ volatile ( "jmp 1" "1:jmp 2" "2:" );
+	__asm__ volatile ( "outb %%al, $0x80" : : "a"(0) );
 }
 
 static inline void outb(uint16_t port, uint8_t val)

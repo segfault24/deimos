@@ -15,6 +15,8 @@
 
 void kmain()
 {
+	uint32_t i;
+
     term_init();
 	term_puts("term init...\n");
 	term_puts("term done\n");
@@ -22,5 +24,9 @@ void kmain()
 	arch_init();
 	term_puts("arch done\n");
 
-	for(;;);
+	for(i=0;;i++)
+	{
+		if(i==1){term_putchar('.');}
+		if(i==0x00FFFFFF){i = 0;}
+	}
 }
