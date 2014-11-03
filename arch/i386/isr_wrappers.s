@@ -1,8 +1,23 @@
 .global isr0w
 .global isr1w
+.global isr2w
+.global isr3w
+.global isr4w
+.global isr5w
+.global isr6w
+.global isr7w
+.global isr8w
+.global isr10w
+.global isr11w
+.global isr12w
 .global isr13w
-
-.global irq1w
+.global isr14w
+.global isr16w
+.global isr17w
+.global isr18w
+.global isr19w
+.global isr20w
+.global isr30w
 
 .align 4
 .extern isr_handler
@@ -11,33 +26,18 @@
 #       segment descriptor before calling
 #       the common handler?
 
-isr0w: # divide by zero error
+isr8w: # double fault
 	pushal
-	push 0 # dummy
-	push 0
+	push $8
 	call isr_handler
-	popal
-	iret
-
-isr1w: # debug
-	pushal
-	push 0 # dummy
-	push 1
-	call isr_handler
+	addl $8, %esp
 	popal
 	iret
 
 isr13w: # general protection fault
 	pushal
-	push 13
+	pushl $13
 	call isr_handler
-	popal
-	iret
-
-irq1w: # keyboard interrupt
-	pushal
-	push 0 # dummy
-	push 33
-	call isr_handler
+	addl $8, %esp
 	popal
 	iret

@@ -1,8 +1,9 @@
 #include <kernel/arch.h>
 #include <i386/gdt.h>
 #include <i386/idt.h>
-#include <i386/pic.h>
 #include <i386/isr.h>
+#include <i386/pic.h>
+#include <i386/irq.h>
 #include <i386/directasm.h>
 
 #include <kernel/tty.h>
@@ -29,10 +30,10 @@
 
 void arch_init()
 {
-	// initialization MUST be done in this order:
-	// GDT -> IDT -> PIC -> ISR
+	// initialization MUST be done in this order
+	// GDT -> IDT -> ISR -> PIC -> IRQ
 
-	disable_interrupts();
+	disable_interrupts(); // just to be sure
 
 	term_puts("gdt init...\n");
 	gdt_init();
@@ -49,6 +50,10 @@ void arch_init()
 	term_puts("isr init...\n");
 	isr_init();
 	term_puts("isr done\n");
+
+	term_puts("irq init...\n");
+	irq_init();
+	term_puts("irq done\n");
 
 	enable_interrupts();
 }

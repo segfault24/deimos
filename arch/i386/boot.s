@@ -28,3 +28,6 @@ kmain_asm:
     call kmain
     cli
     hlt
+
+hang:
+	jmp hang
