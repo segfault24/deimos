@@ -25,6 +25,7 @@ void pic_init()
 
 	// make sure IRQ 2 is enabled, so that the
 	// slave PIC can talk to the master PIC
+	// TODO: is this actually necessary?
 	pic_unmask_irq(2);
 }
 
