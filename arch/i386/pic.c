@@ -7,22 +7,18 @@ void pic_init()
 	outb(PIC_MASTER_CMD,  PIC_INIT);
 	outb(PIC_SLAVE_CMD,   PIC_INIT);
 	iowait();
-
 	// set the new vector offset
 	outb(PIC_MASTER_DATA, PIC_MASTER_OFFSET);
 	outb(PIC_SLAVE_DATA,  PIC_SLAVE_OFFSET);
 	iowait();
-
 	// tell the PICs how they are cascaded
 	outb(PIC_MASTER_DATA, PIC_MASTER_CSCD);
 	outb(PIC_SLAVE_DATA,  PIC_SLAVE_CSCD);
 	iowait();
-
 	// set to 8086 mode
 	outb(PIC_MASTER_DATA, PIC_8086);
 	outb(PIC_SLAVE_DATA, PIC_8086);
 	iowait();
-
 	// set the interrupt mask
 	outb(PIC_MASTER_DATA, PIC_MASTER_MASK);
 	outb(PIC_SLAVE_DATA, PIC_SLAVE_MASK);
