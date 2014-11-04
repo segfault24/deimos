@@ -44,7 +44,6 @@ typedef struct
 	uint32_t offset;
 } __attribute__((packed)) gdt_ptr;
 
-gdt_entry gdt[GDT_NUM_ENTRIES];
 gdt_ptr gptr;
 
 // creates a gdt entry
