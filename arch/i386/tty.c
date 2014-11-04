@@ -6,13 +6,13 @@
 
 /* internal variables and functions */
 
-uint16_t* term_buf;
-uint8_t term_color;
+static uint16_t* term_buf;
+static uint8_t term_color;
 
-uint16_t term_row;
-uint16_t term_col;
+static uint16_t term_row;
+static uint16_t term_col;
 
-void term_updatecursor()
+static void term_updatecursor()
 {
 	uint16_t tmp;
 	tmp = term_row*VGA_WIDTH+term_col;
@@ -22,9 +22,27 @@ void term_updatecursor()
 	outb(VGA_INDEX_REG+1, (uint8_t)(tmp&0xFF));
 }
 
+static void term_scroll()
+{
+    size_t r, c, tmp;
+
+    for(r=1; r<VGA_HEIGHT; r++)
+    {
+        for(c=0; c<VGA_WIDTH; c++)
+        {
+            term_buf[(r-1)*VGA_WIDTH+c] = term_buf[r*VGA_WIDTH+c];
+        }
+    }
+    tmp = (VGA_HEIGHT-1)*VGA_WIDTH;
+    for(c=0; c<VGA_WIDTH; c++)
+    {
+        term_buf[tmp+c] = ' ';
+    }
+}
+
 // doesn't update cursor so that we don't waste
 // time updating it while writing a string
-void term_putchar_t(char c)
+static void term_putchar_t(char c)
 {
     if(c != '\n')
     {
@@ -82,24 +100,6 @@ void term_puti(uint32_t i)
 			term_putchar((char)(hc+0x37)); // A-F
 		}
 	}
-}
-
-void term_scroll()
-{
-    size_t r, c, tmp;
-
-    for(r=1; r<VGA_HEIGHT; r++)
-    {
-        for(c=0; c<VGA_WIDTH; c++)
-        {
-            term_buf[(r-1)*VGA_WIDTH+c] = term_buf[r*VGA_WIDTH+c];
-        }
-    }
-    tmp = (VGA_HEIGHT-1)*VGA_WIDTH;
-    for(c=0; c<VGA_WIDTH; c++)
-    {
-        term_buf[tmp+c] = ' ';
-    }
 }
 
 void term_clear()
