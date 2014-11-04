@@ -8,7 +8,6 @@
 #define IDT_KERNEL_TRAP 0x8F
 #define IDT_KERNEL_NULL 0x00
 
-
 #define IDT_NUM_ENTRIES 256
 
 //                 IDT Entry
@@ -44,15 +43,12 @@ typedef struct
 	uint32_t offset;
 } __attribute__((packed)) idt_ptr;
 
-idt_entry idt[IDT_NUM_ENTRIES];
 idt_ptr iptr;
 
-// creates an idt entry
-idt_entry idt_create_entry(uint16_t selector, uint32_t offset, uint8_t flags);
-
 // registers an isr in the idt
-// here for convenience mostly
-void idt_register_isr(uint8_t interrupt, uint32_t func_ptr);
+void idt_register_isr(uint8_t interrupt, void (*func_ptr));
+// clears an isr in the idt
+void idt_clear_isr(uint8_t interrupt);
 
 // sets up the table
 // this does not register any ISRs
