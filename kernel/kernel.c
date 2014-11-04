@@ -15,18 +15,15 @@
 
 void kmain()
 {
-	uint32_t i;
+//	size_t i;
 
-    term_init();
-	term_puts("term init...\n");
-	term_puts("term done\n");
-	term_puts("arch init...\n");
+	term_init();
 	arch_init();
-	term_puts("arch done\n");
 
-	for(i=0;;i++)
-	{
-		if(i==1){term_putchar('.');}
-		if(i==0x00FFFFFF){i = 0;}
-	}
+	for(;;);
+//	for(i=0;;i++); // loop forever
+//	{
+//		if(i==1){term_putchar('.');}
+//		if(i==0x00FFFFFF){i = 0;}
+//	}
 }

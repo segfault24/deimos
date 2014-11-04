@@ -1,10 +1,10 @@
 #include <kernel/arch.h>
 #include <i386/gdt.h>
 #include <i386/idt.h>
-#include <i386/isr.h>
 #include <i386/pic.h>
-#include <i386/irq.h>
+#include <i386/isr.h>
 #include <i386/pit.h>
+#include <i386/ps2.h>
 #include <i386/directasm.h>
 
 #include <kernel/tty.h>
@@ -29,19 +29,35 @@
 //  +-IRQS (mapped to 32-47)
 //  +-SOFTWARE
 
+void nullfunc(){}
+
 void arch_init()
 {
-	// initialization MUST be done in these sequences
-	// GDT -> IDT -> ISR -> PIC -> IRQ -> PIT
+	// initializations MUST be done as in the sequence below
+	// otherwise we might end up trying to add ISRs to an
+	// improperly initialized IDT or cause triple faults
 
 	disable_interrupts(); // just to be sure
 
+	// setup the global tables with the cpu
 	gdt_init();
 	idt_init();
+
+	// setup the various components of the interrupt system
+	// register ISRs with the isr_register_isr call in i386/isr.h
 	pic_init();
 	isr_init();
-	irq_init();
+
+	isr_register_isr(32, &nullfunc);
+	//isr_register_isr(33, &kbd_isr);
+
+	// setup the interrupt timer for a sysclock
 	pit_init();
 
+	// setup the ps/2 controller(s)
+	ps2_init();
+
+	// now we're finally ready to start receiving interrupts
+	// (cross your fingers)
 	enable_interrupts();
 }
