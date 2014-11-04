@@ -31,7 +31,6 @@ void term_setcolor(uint8_t bg, uint8_t fg);
 void term_putchar(char c);
 void term_puts(const char* str);
 void term_puti(uint32_t i);
-void term_scroll();
 void term_clear();
 void term_init();
 
