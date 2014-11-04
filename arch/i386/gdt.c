@@ -1,5 +1,7 @@
 #include <i386/gdt.h>
 
+static gdt_entry gdt[GDT_NUM_ENTRIES];
+
 gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
 {
 	uint64_t desc;

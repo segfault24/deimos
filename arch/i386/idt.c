@@ -2,13 +2,17 @@
 #include <stddef.h>
 #include <i386/idt.h>
 
-idt_entry idt_create_entry(uint16_t selector, uint32_t offset, uint8_t flags)
+static idt_entry idt[IDT_NUM_ENTRIES];
+
+static idt_entry idt_create_entry(uint16_t selector, void (*offset), uint8_t flags)
 {
 	uint64_t desc;
+	uint32_t offset_t;
 	desc = 0;
+	offset_t = (uint32_t)offset;
 
 	// upper half
-	desc |= offset       & 0xFFFF0000; // offset 16:31
+	desc |= offset_t     & 0xFFFF0000; // offset 16:31
 	desc |= flags<<8     & 0x0000FF00; // flags
 
 	// shift to access lower half
@@ -16,14 +20,19 @@ idt_entry idt_create_entry(uint16_t selector, uint32_t offset, uint8_t flags)
 
 	// lower half
 	desc |= selector<<16 & 0xFFFF0000; // selector 0:15
-	desc |= offset       & 0x0000FFFF; // offset 0:15
+	desc |= offset_t     & 0x0000FFFF; // offset 0:15
 
 	return (idt_entry)desc;
 }
 
-void idt_register_isr(uint8_t interrupt, uint32_t func_ptr)
+void idt_register_isr(uint8_t interrupt, void (*func_ptr))
 {
 	idt[interrupt] = idt_create_entry(0x08, func_ptr, IDT_KERNEL_INT);
+}
+
+void idt_clear_isr(uint8_t interrupt)
+{
+	idt[interrupt] = idt_create_entry(0, 0, IDT_KERNEL_NULL);
 }
 
 void idt_init()
