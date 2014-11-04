@@ -3,6 +3,16 @@
 
 #include <stdint.h>
 
+static inline void disable_interrupts()
+{
+	__asm__ volatile ( "cli" );
+}
+
+static inline void enable_interrupts()
+{
+	__asm__ volatile ( "sti" );
+}
+
 // wrapper stubs that call our generic interrupt handler
 extern void isr0w();  // divide by zero
 extern void isr1w();  // debug
