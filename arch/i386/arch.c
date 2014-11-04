@@ -5,7 +5,6 @@
 #include <i386/isr.h>
 #include <i386/pit.h>
 #include <i386/ps2.h>
-#include <i386/directasm.h>
 
 #include <kernel/tty.h>
 
