@@ -15,7 +15,7 @@
 # setup the stack?
 .section .bootstrap_stack, "aw", @nobits
 stack_bottom:
-.skip 16384 # 16 KiB
+.skip 1048576 # 1 MiB
 stack_top:
 
 # finally we call the kernel
@@ -30,4 +30,5 @@ kmain_asm:
     hlt
 
 hang:
+	hlt
 	jmp hang
