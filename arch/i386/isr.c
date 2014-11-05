@@ -46,6 +46,8 @@ void isr_clear_isr(uint8_t interrupt)
 
 void isr_init()
 {
+	pic_init();
+
 	size_t i;
 	for(i=0; i<IDT_NUM_ENTRIES; i++)
 	{
