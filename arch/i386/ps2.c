@@ -4,8 +4,6 @@
 #include <i386/ioasm.h>
 #include <i386/ps2.h>
 
-#include <kernel/tty.h>
-
 static char us_layout[128] = {
 	0, 27, '1', '2', '3', '4', '5', '6', '7', '8',
 	'9', '0', '-', '=', '\b', '\t', 'q', 'w', 'e', 'r',
@@ -18,17 +16,26 @@ static char us_layout[128] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-void kbd_isr()
-{
-	uint8_t scancode;
+static char kbd_buf = '\0';
 
-	scancode = inb(PS2_REG_DATA);
-	// check if key release
-	if(scancode & 0x80)
+// TODO: make this safer
+static void kbd_isr()
+{
+	uint8_t scancode = inb(PS2_REG_DATA);
+	if(scancode & 0x80) // check if key release
 	{
-		//term_puti((uint32_t)scancode);
-		term_putchar(us_layout[scancode-128]);
+		kbd_buf = us_layout[scancode-128];
 	}
+}
+
+char kbd_getchar()
+{
+	return kbd_buf;
+}
+
+void kbd_clearchar()
+{
+	kbd_buf = '\0';
 }
 
 void ps2_init()

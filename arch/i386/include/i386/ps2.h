@@ -8,7 +8,8 @@
 #define PS2_REG_STATUS 0x64
 #define PS2_REG_CMD 0x64
 
-void kbd_isr();
+char kbd_getchar();
+void kbd_clearchar();
 
 void ps2_init();
 
