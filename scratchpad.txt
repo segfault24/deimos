@@ -1,0 +1,13 @@
+************ VIRTUAL MEMORY MANAGER ************
+enable_paging:
+	load kernel pd
+
+page_fault:
+	does the page exist?
+		swap it in
+	else
+		illegal memory access
+
+swap_in_page:
+	schedule disk i/o
+	resume process
