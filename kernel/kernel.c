@@ -1,6 +1,5 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 #include <kernel/arch.h>
 #include <kernel/tty.h>
 
@@ -17,8 +16,9 @@ void kmain()
 {
 //	size_t i;
 
-	term_init();
+	tty_init();
 	arch_init();
+	tty_init2();
 
 	for(;;);
 //	for(i=0;;i++); // loop forever
