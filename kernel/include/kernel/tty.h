@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <string.h>
 
 #define VGA_BLACK 0
 #define VGA_BLUE 1
@@ -27,11 +26,15 @@
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
-void term_setcolor(uint8_t bg, uint8_t fg);
-void term_putchar(char c);
-void term_puts(const char* str);
-void term_puti(uint32_t i);
-void term_clear();
-void term_init();
+void tty_setcolor(uint8_t bg, uint8_t fg);
+void tty_clear();
+void tty_init(); // output functions
+void tty_init2(); // input functions
+
+void tty_putchar(char c);
+char tty_getchar();
+
+void tty_puts(const char* str);
+void tty_puti(uint32_t i);
 
 #endif

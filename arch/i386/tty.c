@@ -1,28 +1,28 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#include <i386/ps2.h>
 #include <i386/ioasm.h>
 #include <kernel/tty.h>
 
 /* internal variables and functions */
 
-static uint16_t* term_buf;
-static uint8_t term_color;
+static uint16_t* tty_buf;
+static uint8_t tty_color;
 
-static uint16_t term_row;
-static uint16_t term_col;
+static uint16_t tty_row;
+static uint16_t tty_col;
 
-static void term_updatecursor()
+static void tty_updatecursor()
 {
 	uint16_t tmp;
-	tmp = term_row*VGA_WIDTH+term_col;
+	tmp = tty_row*VGA_WIDTH+tty_col;
 	outb(VGA_INDEX_REG, 14);
 	outb(VGA_INDEX_REG+1, (uint8_t)((tmp>>8)&0xFF));
 	outb(VGA_INDEX_REG, 15);
 	outb(VGA_INDEX_REG+1, (uint8_t)(tmp&0xFF));
 }
 
-static void term_scroll()
+static void tty_scroll()
 {
     size_t r, c, tmp;
 
@@ -30,93 +30,109 @@ static void term_scroll()
     {
         for(c=0; c<VGA_WIDTH; c++)
         {
-            term_buf[(r-1)*VGA_WIDTH+c] = term_buf[r*VGA_WIDTH+c];
+            tty_buf[(r-1)*VGA_WIDTH+c] = tty_buf[r*VGA_WIDTH+c];
         }
     }
     tmp = (VGA_HEIGHT-1)*VGA_WIDTH;
     for(c=0; c<VGA_WIDTH; c++)
     {
-        term_buf[tmp+c] = ' ';
+        tty_buf[tmp+c] = ' ';
     }
 }
 
 // doesn't update cursor so that we don't waste
 // time updating it while writing a string
-static void term_putchar_t(char c)
+static void tty_putchar_t(char c)
 {
     if(c != '\n')
     {
-        term_buf[term_row*VGA_WIDTH+term_col] = term_color<<8 | c;
-        term_col++;
+        tty_buf[tty_row*VGA_WIDTH+tty_col] = tty_color<<8 | c;
+        tty_col++;
     }
-    if(term_col >= VGA_WIDTH || c == '\n')
+    if(tty_col >= VGA_WIDTH || c == '\n')
     {
-        term_col = 0;
-        term_row++;
-        if(term_row >= VGA_HEIGHT)
+        tty_col = 0;
+        tty_row++;
+        if(tty_row >= VGA_HEIGHT)
         {
-            term_scroll();
-            term_row = VGA_HEIGHT-1;
+            tty_scroll();
+            tty_row = VGA_HEIGHT-1;
         }
     }
 }
 
 /* library implementations */
 
-void term_setcolor(uint8_t bg, uint8_t fg)
+void tty_setcolor(uint8_t bg, uint8_t fg)
 {
-    term_color = fg | bg<<4;
+    tty_color = fg | bg<<4;
 }
 
-void term_putchar(char c)
+void tty_putchar(char c)
 {
-	term_putchar_t(c);
-	term_updatecursor();
+	tty_putchar_t(c);
+	tty_updatecursor();
 }
 
-void term_puts(const char* str)
+// TODO: mmmm, dat blocking IO
+char tty_getchar()
 {
-    size_t i;
-    size_t len;
-
-    len = strlen(str);
-    for(i=0; i<len; i++)
-        term_putchar_t(str[i]);
-	term_updatecursor();
+	char c;
+	do
+	{
+		c = kbd_getchar();
+	} while(c=='\0');
+	kbd_clearchar();
+	return c;
 }
 
-void term_puti(uint32_t i)
+void tty_puts(const char* str)
+{
+	size_t i = 0;
+	while(str[i] != '\0')
+	{
+		tty_putchar_t(str[i]);
+		i++;
+	}
+	tty_updatecursor();
+}
+
+void tty_puti(uint32_t i)
 {
 	size_t j;
 
-	term_puts("0x");
 	for(j=8; j>0; j--)
 	{
 		uint8_t hc = (i>>((j-1)*4)) & 0x0F;
 		if(hc < 0x0A)
 		{
-			term_putchar((char)(hc+0x30)); // 0-9
+			tty_putchar((char)(hc+0x30)); // 0-9
 		} else {
-			term_putchar((char)(hc+0x37)); // A-F
+			tty_putchar((char)(hc+0x37)); // A-F
 		}
 	}
 }
 
-void term_clear()
+void tty_clear()
 {
 	size_t i;
 
-	term_row = 0;
-	term_col = 0;
+	tty_row = 0;
+	tty_col = 0;
 	// clear the buffer directly (faster than putchar)
 	for(i=0; i<VGA_HEIGHT*VGA_WIDTH; i++)
-		term_buf[i] = term_color<<8 | ' ';
-	term_updatecursor();
+		tty_buf[i] = tty_color<<8 | ' ';
+	tty_updatecursor();
 }
 
-void term_init()
+void tty_init()
 {
-    term_buf = (uint16_t*)VGA_BASE_ADDR;
-    term_setcolor(VGA_BLACK, VGA_GREEN);
-	term_clear();
+    tty_buf = (uint16_t*)VGA_BASE_ADDR;
+    tty_setcolor(VGA_BLACK, VGA_GREEN);
+	tty_clear();
+}
+
+void tty_init2()
+{
+	//
 }
