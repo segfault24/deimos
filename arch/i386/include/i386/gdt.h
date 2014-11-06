@@ -9,7 +9,7 @@
 #define GDT_USER_CODE   0xC0FA
 #define GDT_USER_DATA   0xC0F2
 
-#define GDT_NUM_ENTRIES 3
+#define GDT_NUM_ENTRIES 5
 
 //                 GDT Entry
 // 31                  15                  0
@@ -45,9 +45,6 @@ typedef struct
 } __attribute__((packed)) gdt_ptr;
 
 gdt_ptr gptr;
-
-// creates a gdt entry
-gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags);
 
 // sets up the table
 void gdt_init();
