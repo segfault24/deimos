@@ -2,7 +2,7 @@
 
 static gdt_entry gdt[GDT_NUM_ENTRIES];
 
-gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
+static gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
 {
 	uint64_t desc;
 
@@ -31,11 +31,14 @@ void gdt_init()
 
 	// null descriptor
 	gdt[0] = gdt_create_entry(0, 0, 0);
-	// code segment
+	// kernel code segment (selector 0x08)
 	gdt[1] = gdt_create_entry(0, 0xFFFFFFFF, GDT_KERNEL_CODE);
-	// data degment
+	// kernel data segment (selector 0x10)
 	gdt[2] = gdt_create_entry(0, 0xFFFFFFFF, GDT_KERNEL_DATA);
-
+	// userspace code segment (selector 0x18)
+	gdt[3] = gdt_create_entry(0, 0xFFFFFFFF, GDT_USER_CODE);
+	// userspace data segment (selector 0x20)
+	gdt[4] = gdt_create_entry(0, 0xFFFFFFFF, GDT_USER_DATA);
 	// call our asm function to perform actual load
 	gdt_load();
 }
