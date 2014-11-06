@@ -12,18 +12,28 @@
 //   - interrupts are disabled
 // https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#Machine-state
 
+extern void* kstack_top;
+extern void* kstack_bottom;
+extern void* kheap_start;
+extern void* kheap_end;
+
 void kmain()
 {
 //	size_t i;
 
 	tty_init();
 	arch_init();
-	tty_init2();
 
-	for(;;);
-//	for(i=0;;i++); // loop forever
-//	{
-//		if(i==1){term_putchar('.');}
-//		if(i==0x00FFFFFF){i = 0;}
-//	}
+	tty_puts("kheap_start:   ");
+	tty_puti((uint32_t)&kheap_start);
+	tty_puts("\nkheap_end:     ");
+	tty_puti((uint32_t)&kheap_end);
+	tty_puts("\nkstack_top:    ");
+	tty_puti((uint32_t)&kstack_top);
+	tty_puts("\nkstack_bottom: ");
+	tty_puti((uint32_t)&kstack_bottom);
+	tty_puts("\n");
+
+	for(;;)
+		tty_putchar(tty_getchar());
 }
