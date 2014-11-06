@@ -5,18 +5,28 @@
 .set MAGIC,     0x1BADB002          # multiboot magic number
 .set CHECKSUM,  -(MAGIC + FLAGS)    # checksum
 
-# here be the actual multiboot section
+# multiboot header
 .section .multiboot
 .align 4
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
 
-# setup the stack?
-.section .bootstrap_stack, "aw", @nobits
-stack_bottom:
+# kernel heap
+.section .kheap, "aw", @nobits
+.global kheap_start
+.global kheap_end
+kheap_start:
 .skip 1048576 # 1 MiB
-stack_top:
+kheap_end:
+
+# kernel stack
+.section .kstack, "aw", @nobits
+.global kstack_top
+.global kstack_bottom
+kstack_top:
+.skip 16384 # 16 KiB
+kstack_bottom:
 
 # finally we call the kernel
 .section .text
@@ -24,11 +34,12 @@ stack_top:
 .global kmain_asm
 .type kmain_asm, @function
 kmain_asm:
-    movl $stack_top, %esp
+    movl $kstack_bottom, %esp
     call kmain
     cli
-    hlt
+    jmp hang
 
 hang:
 	hlt
 	jmp hang
+
