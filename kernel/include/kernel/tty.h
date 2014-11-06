@@ -28,8 +28,7 @@
 
 void tty_setcolor(uint8_t bg, uint8_t fg);
 void tty_clear();
-void tty_init(); // output functions
-void tty_init2(); // input functions
+void tty_init();
 
 void tty_putchar(char c);
 char tty_getchar();
