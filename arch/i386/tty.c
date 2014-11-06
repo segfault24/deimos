@@ -131,8 +131,3 @@ void tty_init()
     tty_setcolor(VGA_BLACK, VGA_GREEN);
 	tty_clear();
 }
-
-void tty_init2()
-{
-	//
-}
