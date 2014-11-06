@@ -1,10 +1,10 @@
 #include <kernel/arch.h>
 #include <i386/gdt.h>
 #include <i386/idt.h>
-#include <i386/pic.h>
 #include <i386/isr.h>
 #include <i386/pit.h>
 #include <i386/ps2.h>
+#include <i386/pmem_mgr.h>
 
 #include <kernel/tty.h>
 
@@ -17,46 +17,56 @@
 //   - interrupts are disabled
 // https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#Machine-state
 
-// Breakdown of interrupts on x86
-//
-// -INTERRUPTS (0-256)
-//  +-EXCEPTIONS (0-31)
-//  | +-FAULTS (0-1,5-7,9-14,16-17,19-20)
-//  | +-TRAPS (3-4)
-//  | +-ABORTS (8,18)
-//  | +-(RESERVED) (15,21-31)
-//  +-IRQS (mapped to 32-47)
-//  +-SOFTWARE
+void test_stat()
+{
+	tty_puts("    Free:");
+	tty_puti(pmem_free_blocks());
+	tty_puts(" Used:");
+	tty_puti(pmem_used_blocks());
+	tty_puts(" Total:");
+	tty_puti(pmem_total_blocks());
+	tty_puts("\n");
+}
 
-void nullfunc(){}
+void* test_alloc()
+{
+	void* ptr = pmem_mgr_alloc();
+	tty_puts("Alloc block: ");
+	tty_puti((uint32_t)ptr);
+	test_stat();
+	return ptr;
+}
+
+void test_free(void* ptr)
+{
+	pmem_mgr_free(ptr);
+	tty_puts("Freed block: ");
+	tty_puti((uint32_t)ptr);
+	test_stat();
+}
 
 void arch_init()
 {
+	//size_t i;
+	//void* ptrs[64];
+
 	// initializations MUST be done as in the sequence below
 	// otherwise we might end up trying to add ISRs to an
-	// improperly initialized IDT or cause triple faults
-
+	// improperly initialized IDT or cause bad things
 	disable_interrupts(); // just to be sure
-
-	// setup the global tables with the cpu
-	gdt_init();
+	gdt_init(); // setup the global tables with the cpu
 	idt_init();
+	isr_init(); // setup the various components of the interrupt system
+	pit_init(); // setup the interrupt timer for a sysclock
+	ps2_init(); // setup the ps/2 controller(s)
 
-	// setup the various components of the interrupt system
-	// register ISRs with the isr_register_isr call in i386/isr.h
-	pic_init();
-	isr_init();
+	// TODO: test the physical memory manager
+	//pmem_mgr_init(1024); // setup the low level memory manager
+	//pmem_mgr_reserve_region((void*)0, (void*)(16*4096-1));
+	//test_stat();
+	//for(i=0; i<1024; i++)
+	//	ptrs[i] = test_alloc();
+	//test_free(ptrs[0]);
 
-	isr_register_isr(32, &nullfunc);
-	//isr_register_isr(33, &kbd_isr);
-
-	// setup the interrupt timer for a sysclock
-	pit_init();
-
-	// setup the ps/2 controller(s)
-	ps2_init();
-
-	// now we're finally ready to start receiving interrupts
-	// (cross your fingers)
-	enable_interrupts();
+	enable_interrupts(); // now we're ready
 }
