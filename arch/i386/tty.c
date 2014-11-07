@@ -113,6 +113,13 @@ void tty_puti(uint32_t i)
 	}
 }
 
+void putv(const char* s1, uint32_t i, const char* s2)
+{
+	tty_puts(s1);
+	tty_puti(i);
+	tty_puts(s2);
+}
+
 void tty_clear()
 {
 	size_t i;
