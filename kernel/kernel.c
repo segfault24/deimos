@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <kernel/multiboot.h>
 #include <kernel/arch.h>
 #include <kernel/tty.h>
 #include <kernel/panic.h>
@@ -18,10 +19,10 @@ extern void* kstack_bottom;
 extern void* kheap_start;
 extern void* kheap_end;
 
-void kmain()
+void kmain(multiboot_info_t* mbt)
 {
 	tty_init();
-	arch_init();
+	arch_init(mbt);
 
 	//tty_puts("kheap_start:   ");
 	//tty_puti((uint32_t)&kheap_start);
