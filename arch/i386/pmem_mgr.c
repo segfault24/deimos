@@ -65,6 +65,8 @@ void pmem_mgr_init(uint32_t mem_size_in_blocks)
 
 	// round the number of blocks to a multiple of 32
 	// setup our global block counters
+	if(mem_size_in_blocks>PMEM_MAX_BLOCKS)
+		mem_size_in_blocks = PMEM_MAX_BLOCKS;
 	pmem_num_total_blocks = mem_size_in_blocks - mem_size_in_blocks%32;
 	pmem_num_used_blocks = 0;
 	pmem_num_free_blocks = pmem_num_total_blocks;
@@ -78,11 +80,11 @@ void pmem_mgr_init(uint32_t mem_size_in_blocks)
 	mark_block(0);
 }
 
-void pmem_mgr_reserve_region(void* start, void* end)
+void pmem_mgr_reserve_region(phys_addr start, phys_addr end)
 {
 	uint32_t i;
-	uint32_t s_block = (uint32_t)start/PMEM_BLOCK_SIZE;
-	uint32_t e_block = (uint32_t)end/PMEM_BLOCK_SIZE;
+	uint32_t s_block = start/PMEM_BLOCK_SIZE;
+	uint32_t e_block = end/PMEM_BLOCK_SIZE;
 
 	for(i=s_block; i<=e_block && i<pmem_num_total_blocks; i++)
 	{
@@ -90,11 +92,11 @@ void pmem_mgr_reserve_region(void* start, void* end)
 	}
 }
 
-void pmem_mgr_free_region(void* start, void* end)
+void pmem_mgr_free_region(phys_addr start, phys_addr end)
 {
 	uint32_t i;
-	uint32_t s_block = (uint32_t)start/PMEM_BLOCK_SIZE;
-	uint32_t e_block = (uint32_t)end/PMEM_BLOCK_SIZE;
+	uint32_t s_block = start/PMEM_BLOCK_SIZE;
+	uint32_t e_block = end/PMEM_BLOCK_SIZE;
 
 	for(i=s_block; i<=e_block && i<pmem_num_total_blocks; i++)
 	{
@@ -102,7 +104,7 @@ void pmem_mgr_free_region(void* start, void* end)
 	}
 }
 
-void* pmem_mgr_alloc()
+phys_addr pmem_mgr_alloc()
 {
 	uint32_t i, j, block;
 
@@ -121,7 +123,7 @@ void* pmem_mgr_alloc()
 					// mark the block as used in the map
 					mark_block(block);
 					// return the address
-					return (void*)(block*PMEM_BLOCK_SIZE);
+					return (phys_addr)(block*PMEM_BLOCK_SIZE);
 				}
 			}
 		}
@@ -129,9 +131,9 @@ void* pmem_mgr_alloc()
 	return 0;
 }
 
-void pmem_mgr_free(void* addr)
+void pmem_mgr_free(phys_addr addr)
 {
-	uint32_t block = (uint32_t)addr/PMEM_BLOCK_SIZE;
+	uint32_t block = addr/PMEM_BLOCK_SIZE;
 	if(block<pmem_num_total_blocks)
 	{
 		clear_block(block);
