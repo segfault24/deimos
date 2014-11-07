@@ -1,16 +1,13 @@
 - properly implement ps/2 control
 - make keyboard driver better
-
 - setup paging
-
 - processes and multitasking
-
+- halt interrupts in kernel panic
 
 ????
 - IPC
 - multiple processors
 - system calls
-
 
 dlibc
 - printf
