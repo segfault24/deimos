@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <kernel/arch.h>
 #include <kernel/tty.h>
+#include <kernel/panic.h>
 
 // assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
@@ -19,20 +20,18 @@ extern void* kheap_end;
 
 void kmain()
 {
-//	size_t i;
-
 	tty_init();
 	arch_init();
 
-	tty_puts("kheap_start:   ");
-	tty_puti((uint32_t)&kheap_start);
-	tty_puts("\nkheap_end:     ");
-	tty_puti((uint32_t)&kheap_end);
-	tty_puts("\nkstack_top:    ");
-	tty_puti((uint32_t)&kstack_top);
-	tty_puts("\nkstack_bottom: ");
-	tty_puti((uint32_t)&kstack_bottom);
-	tty_puts("\n");
+	//tty_puts("kheap_start:   ");
+	//tty_puti((uint32_t)&kheap_start);
+	//tty_puts("\nkheap_end:     ");
+	//tty_puti((uint32_t)&kheap_end);
+	//tty_puts("\nkstack_top:    ");
+	//tty_puti((uint32_t)&kstack_top);
+	//tty_puts("\nkstack_bottom: ");
+	//tty_puti((uint32_t)&kstack_bottom);
+	//tty_puts("\n");
 
 	for(;;)
 		tty_putchar(tty_getchar());
