@@ -35,6 +35,7 @@ kstack_bottom:
 .type kmain_asm, @function
 kmain_asm:
     movl $kstack_bottom, %esp
+	pushl %ebx
     call kmain
     cli
     jmp hang
