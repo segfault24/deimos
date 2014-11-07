@@ -35,5 +35,6 @@ char tty_getchar();
 
 void tty_puts(const char* str);
 void tty_puti(uint32_t i);
+void putv(const char* s1, uint32_t i, const char* s2);
 
 #endif
