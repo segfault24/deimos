@@ -98,7 +98,7 @@ void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 	if(!pd_entry_is_present(*pde))
 	{
 		// the table is not present, create a new one
-		page_table* pt = (page_table*)pmem_mgr_alloc();
+		pt = (page_table*)pmem_mgr_alloc();
 		if(!pt)
 		{
 			// we couldnt allocate a new table
@@ -125,7 +125,8 @@ void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 	pt_entry_set_attrib(pte, PT_ENTRY_WRITABLE);
 	pt_entry_set_attrib(pte, PT_ENTRY_PRESENT);
 
-	// TODO: flush the corresponding TLB entry?
+	// flush the corresponding TLB entry
+	vmem_mgr_flush_tlb_entry(vaddr);
 }
 
 // TODO: check logic, tentative copy of source right now
@@ -151,7 +152,7 @@ void vmem_mgr_init()
 	if(!pt2)
 		kernel_panic("could not allocate memory for kernel initialization");
 
-	// identity map the first 4MiB
+	// identity map 0-4MiB
 	// we set every entry so clearing the table is unecessary
 	paddr = 0x00000000;
 	vaddr = 0x00000000;
@@ -168,7 +169,7 @@ void vmem_mgr_init()
 		vaddr += VMEM_PAGE_SIZE;
 	}
 
-	// map 1MiB to 3GiB
+	// map 1-5MiB to 3GiB
 	paddr = 0x00100000;
 	vaddr = 0xC0000000;
 	for(i=0; i<PT_PAGES_PER_TABLE; i++)
@@ -206,5 +207,5 @@ void vmem_mgr_init()
 
 	// switch to our directory and enable paging
 	vmem_mgr_switch_directory(pd);
-	//vmem_mgr_enable_paging();
+	vmem_mgr_enable_paging();
 }
