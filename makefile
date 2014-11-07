@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ARCH=i386
-
 ARCHDIR=arch/$(ARCH)
 
 # compiler and linker locations & options
@@ -53,7 +52,7 @@ deimos.iso: deimos.bin
 	rm -rf isodir
 
 # actual targets
-all: dlibc kernel
+all: dlibc kernel iso
 dlibc: dlibc.a
 kernel: deimos.bin
 iso: deimos.iso
