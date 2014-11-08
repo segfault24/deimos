@@ -22,6 +22,16 @@ void isr_handler(uint8_t interrupt, uint32_t error)
 	}
 }
 
+inline void isr_enable_interrupts()
+{
+	__asm__ volatile ( "sti" );
+}
+
+inline void isr_disable_interrupts()
+{
+	__asm__ volatile ( "cli" );
+}
+
 void isr_register_isr(uint8_t interrupt,  void (*func_ptr))
 {
 	specific_handler[interrupt] = func_ptr;

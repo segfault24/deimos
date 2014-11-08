@@ -80,9 +80,9 @@ char tty_getchar()
 	char c;
 	do
 	{
-		c = kbd_getchar();
+		c = (char)ps2_key_to_ascii(ps2_get_key());
 	} while(c=='\0');
-	kbd_clearchar();
+	ps2_clr_key();
 	return c;
 }
 

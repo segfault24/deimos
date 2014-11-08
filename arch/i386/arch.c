@@ -66,7 +66,7 @@ void arch_init(multiboot_info_t* mbt)
 	// initializations MUST be done as in the sequence below
 	// otherwise we might end up trying to add ISRs to an
 	// improperly initialized IDT or cause bad things
-	disable_interrupts(); // just to be sure
+	isr_disable_interrupts(); // just to be sure
 	gdt_init(); // setup the global tables with the cpu
 	idt_init();
 	isr_init(); // setup the various components of the interrupt system
@@ -93,7 +93,7 @@ void arch_init(multiboot_info_t* mbt)
 	// TODO: test the virtual memory manager
 	vmem_mgr_init();
 
-	enable_interrupts(); // now we're ready
+	isr_enable_interrupts(); // now we're ready
 
 	//print_page_directory(vmem_mgr_get_directory());
 }
