@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
+
 #include <i386/ps2.h>
+#include <i386/ps2_kbd.h>
 #include <i386/ioasm.h>
 #include <kernel/tty.h>
 
@@ -24,26 +26,30 @@ static void tty_updatecursor()
 
 static void tty_scroll()
 {
-    size_t r, c, tmp;
+	size_t r, c, tmp;
 
-    for(r=1; r<VGA_HEIGHT; r++)
-    {
-        for(c=0; c<VGA_WIDTH; c++)
-        {
-            tty_buf[(r-1)*VGA_WIDTH+c] = tty_buf[r*VGA_WIDTH+c];
-        }
-    }
-    tmp = (VGA_HEIGHT-1)*VGA_WIDTH;
-    for(c=0; c<VGA_WIDTH; c++)
-    {
-        tty_buf[tmp+c] = ' ';
-    }
+	for(r=1; r<VGA_HEIGHT; r++)
+		for(c=0; c<VGA_WIDTH; c++)
+			tty_buf[(r-1)*VGA_WIDTH+c] = tty_buf[r*VGA_WIDTH+c];
+
+	tmp = (VGA_HEIGHT-1)*VGA_WIDTH;
+	for(c=0; c<VGA_WIDTH; c++)
+		tty_buf[tmp+c] = ' ';
 }
 
 // doesn't update cursor so that we don't waste
 // time updating it while writing a string
 static void tty_putchar_t(char c)
 {
+	// TODO: implement tabs and backspaces
+	if(c == '\t')
+	{
+		return;
+	}
+	if(c == '\b')
+	{
+		return;
+	}
     if(c != '\n')
     {
         tty_buf[tty_row*VGA_WIDTH+tty_col] = tty_color<<8 | c;
@@ -80,9 +86,9 @@ char tty_getchar()
 	char c;
 	do
 	{
-		c = (char)ps2_key_to_ascii(ps2_get_key());
+		c = (char)kbd_key_to_ascii(kbd_get_key());
 	} while(c=='\0');
-	ps2_clr_key();
+	kbd_clr_key();
 	return c;
 }
 

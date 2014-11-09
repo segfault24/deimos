@@ -1,4 +1,3 @@
-#include <stddef.h>
 #include <stdint.h>
 #include <i386/pmem_mgr.h>
 #include <i386/vmem_pt.h>

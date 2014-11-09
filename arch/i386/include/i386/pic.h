@@ -1,7 +1,6 @@
 #ifndef I386_PIC_H
 #define I386_PIC_H
 
-#include <stddef.h>
 #include <stdint.h>
 
 #define PIC_MASTER_CMD  0x20

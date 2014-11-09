@@ -1,7 +1,6 @@
 #ifndef I386_VMEM_PD_H
 #define I386_VMEM_PD_H
 
-#include <stddef.h>
 #include <stdint.h>
 #include <i386/pmem_mgr.h>
 

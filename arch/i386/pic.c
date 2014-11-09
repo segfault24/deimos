@@ -1,5 +1,5 @@
-#include <i386/pic.h>
 #include <i386/ioasm.h>
+#include <i386/pic.h>
 
 void pic_init()
 {

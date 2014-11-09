@@ -1,9 +1,13 @@
 #include <stddef.h>
 #include <stdint.h>
+
 #include <kernel/multiboot.h>
-#include <kernel/arch.h>
 #include <kernel/tty.h>
-#include <kernel/panic.h>
+#include <kernel/mm.h>
+#include <kernel/kalloc.h>
+#include <kernel/arch.h>
+#include <kernel/error.h>
+#include <kernel/string.h>
 
 // assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
@@ -14,25 +18,12 @@
 //   - interrupts are disabled
 // https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#Machine-state
 
-extern void* kstack_top;
-extern void* kstack_bottom;
-extern void* kheap_start;
-extern void* kheap_end;
-
 void kmain(multiboot_info_t* mbt)
 {
-	tty_init();
-	arch_init(mbt);
-
-	//tty_puts("kheap_start:   ");
-	//tty_puti((uint32_t)&kheap_start);
-	//tty_puts("\nkheap_end:     ");
-	//tty_puti((uint32_t)&kheap_end);
-	//tty_puts("\nkstack_top:    ");
-	//tty_puti((uint32_t)&kstack_top);
-	//tty_puts("\nkstack_bottom: ");
-	//tty_puti((uint32_t)&kstack_bottom);
-	//tty_puts("\n");
+	tty_init(); // terminal
+	mm_init(mbt); // memory managers
+	kheap_init(); // kernel heap
+	arch_init(); // architecture unique stuff
 
 	for(;;)
 		tty_putchar(tty_getchar());
