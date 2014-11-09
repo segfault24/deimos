@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <kernel/panic.h>
+#include <kernel/error.h>
 #include <i386/pmem_mgr.h>
 #include <i386/vmem_pd.h>
 #include <i386/vmem_pt.h>
@@ -129,7 +129,6 @@ void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 	vmem_mgr_flush_tlb_entry(vaddr);
 }
 
-// TODO: check logic, tentative copy of source right now
 void vmem_mgr_init()
 {
 	phys_addr paddr;
@@ -145,12 +144,12 @@ void vmem_mgr_init()
 	// allocate default page table
 	pt = (page_table*)pmem_mgr_alloc();
 	if(!pt)
-		kernel_panic("could not allocate memory for kernel initialization");
+		kpanic("could not allocate memory for kernel initialization");
 
 	// allocate 3GiB page table
 	pt2 = (page_table*)pmem_mgr_alloc();
 	if(!pt2)
-		kernel_panic("could not allocate memory for kernel initialization");
+		kpanic("could not allocate memory for kernel initialization");
 
 	// identity map 0-4MiB
 	// we set every entry so clearing the table is unecessary
@@ -169,8 +168,8 @@ void vmem_mgr_init()
 		vaddr += VMEM_PAGE_SIZE;
 	}
 
-	// map 1-5MiB to 3GiB
-	paddr = 0x00100000;
+	// map 0-4MiB to 3GiB
+	paddr = 0x00000000;
 	vaddr = 0xC0000000;
 	for(i=0; i<PT_PAGES_PER_TABLE; i++)
 	{
@@ -188,7 +187,7 @@ void vmem_mgr_init()
 	// create default directory
 	pd = (page_directory*)pmem_mgr_alloc();
 	if(!pd)
-		kernel_panic("could not allocate memory for kernel initialization");
+		kpanic("could not allocate memory for kernel initialization");
 
 	// clear the directory
 	for(i=0; i<PD_TABLES_PER_DIR; i++)

@@ -47,6 +47,24 @@ void pmem_mgr_free_region(phys_addr start, phys_addr end)
 	}
 }
 
+void pmem_mgr_reserve_region(phys_addr start, phys_addr end)
+{
+	uint32_t i;
+	uint32_t s_block = start/PMEM_BLOCK_SIZE;
+	uint32_t e_block = end/PMEM_BLOCK_SIZE;
+
+	for(i=s_block; i<=e_block; i++)
+	{
+		// if it isnt already used
+		if(!test_block(i))
+		{
+			pmem_bitmap[i/32] |= (1 << (i%32));
+			pmem_num_free_blocks--;
+			pmem_num_total_blocks--;
+		}
+	}
+}
+
 phys_addr pmem_mgr_alloc()
 {
 	uint32_t i, j, block;

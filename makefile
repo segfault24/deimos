@@ -6,16 +6,13 @@ ARCHDIR=arch/$(ARCH)
 # compiler and linker locations & options
 AR=/home/austin/opt/cross/bin/i686-elf-ar
 CC=/home/austin/opt/cross/bin/i686-elf-gcc
-CFLAGS=-g -ffreestanding -fbuiltin -Wall -Werror -Wextra -I$(CINC) -I$(KINC) -I$(AINC)
+CFLAGS=-g -ffreestanding -fbuiltin -Wall -Werror -Wextra -I$(KINC) -I$(AINC)
 LDFLAGS=-nostdlib -lgcc
 
 # include directories
-CINC=dlibc/include
 AINC=$(ARCHDIR)/include
 KINC=kernel/include
 
-#DLIBCOBJS
-include dlibc/make.config
 #ARCHOBJS
 include $(ARCHDIR)/make.config
 #KERNELOBJS
@@ -26,13 +23,9 @@ OSOBJS=$(ARCHOBJS) $(KERNELOBJS)
 # dummy default target (see below)
 _all: all
 
-# compile dlibc
-dlibc.a: $(DLIBCOBJS)
-	$(AR) rcs $@ $(DLIBCOBJS)
-
 # compile kernel
-deimos.bin: $(OSOBJS) dlibc.a $(ARCHDIR)/kernel.lnk
-	$(CC) -T $(ARCHDIR)/kernel.lnk -o $@ $(OSOBJS) dlibc.a $(CFLAGS) $(LDFLAGS)
+deimos.bin: $(OSOBJS) $(ARCHDIR)/kernel.lnk
+	$(CC) -T $(ARCHDIR)/kernel.lnk -o $@ $(OSOBJS) $(CFLAGS) $(LDFLAGS)
 
 # generic compile rules
 %.o: %.c
@@ -52,8 +45,7 @@ deimos.iso: deimos.bin
 	rm -rf isodir
 
 # actual targets
-all: dlibc kernel iso
-dlibc: dlibc.a
+all: kernel iso
 kernel: deimos.bin
 iso: deimos.iso
 
@@ -61,7 +53,7 @@ run: iso
 	qemu -cdrom deimos.iso
 
 clean:
-	rm -f *.o */*.o */*/*.o dlibc.a deimos.bin deimos.iso
+	rm -f *.o */*.o */*/*.o deimos.bin deimos.iso
 
-.PHONY: all dlibc kernel iso run clean
+.PHONY: all kernel iso run clean
 

@@ -1,4 +1,4 @@
-#include <string.h>
+#include <kernel/string.h>
 
 void *memmove(void *s1, const void *s2, size_t n)
 {
