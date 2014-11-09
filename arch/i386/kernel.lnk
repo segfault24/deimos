@@ -1,4 +1,4 @@
-ENTRY(kmain_asm)
+ENTRY(boot)
 SECTIONS
 {
 	. = 1M; /* kernel load address */

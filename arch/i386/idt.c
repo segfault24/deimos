@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
+
 #include <i386/idt.h>
 
 static idt_entry idt[IDT_NUM_ENTRIES];

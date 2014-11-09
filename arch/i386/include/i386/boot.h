@@ -1,0 +1,8 @@
+#ifndef I386_BOOT_H
+#define I386_BOOT_H
+
+#define KERNEL_PADDR 0x00100000
+#define KERNEL_VADDR 0xC0000000
+#define KERNEL_MSIZE 0x00300000
+
+#endif
