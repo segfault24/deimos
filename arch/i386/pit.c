@@ -4,7 +4,12 @@
 #include <i386/isr.h>
 #include <i386/pit.h>
 
-void tmr_isr(){}
+static uint32_t ticks = 0;
+
+static void tmr_isr()
+{
+	ticks++;
+}
 
 void pit_init()
 {
