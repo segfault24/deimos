@@ -44,27 +44,27 @@ static void tty_putchar_t(char c)
 	// TODO: implement tabs and backspaces
 	if(c == '\t')
 	{
-		return;
+		tty_col += 4-tty_col%4;
 	}
 	if(c == '\b')
 	{
 		return;
 	}
-    if(c != '\n')
-    {
-        tty_buf[tty_row*VGA_WIDTH+tty_col] = tty_color<<8 | c;
-        tty_col++;
-    }
-    if(tty_col >= VGA_WIDTH || c == '\n')
-    {
-        tty_col = 0;
-        tty_row++;
-        if(tty_row >= VGA_HEIGHT)
-        {
-            tty_scroll();
-            tty_row = VGA_HEIGHT-1;
-        }
-    }
+	if(c != '\n' && c != '\t')
+	{
+		tty_buf[tty_row*VGA_WIDTH+tty_col] = tty_color<<8 | c;
+		tty_col++;
+	}
+	if(tty_col >= VGA_WIDTH || c == '\n')
+	{
+		tty_col = 0;
+		tty_row++;
+	}
+	if(tty_row >= VGA_HEIGHT)
+	{
+		tty_scroll();
+		tty_row = VGA_HEIGHT-1;
+	}
 }
 
 /* library implementations */
@@ -119,7 +119,7 @@ void tty_puti(uint32_t i)
 	}
 }
 
-void putv(const char* s1, uint32_t i, const char* s2)
+void tty_putv(const char* s1, uint32_t i, const char* s2)
 {
 	tty_puts(s1);
 	tty_puti(i);
