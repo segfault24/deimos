@@ -5,7 +5,7 @@
 #define PROCESS_SLEEPING 1
 #define PROCESS_STOPPED  2
 
-typedef struct process {
+typedef struct _process_t {
 	int pid;
 	char state;
 	/* registers */
