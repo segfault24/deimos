@@ -1,3 +1,5 @@
+- kernel heap
+
 - properly implement ps/2 control
 - make keyboard driver better
 

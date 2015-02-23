@@ -3,10 +3,15 @@
 #include <kernel/multiboot.h>
 #include <kernel/tty.h>
 #include <kernel/error.h>
+#include <kernel/kalloc.h>
+#include <kernel/mm.h>
 
 #include <i386/boot.h>
 #include <i386/pmem_mgr.h>
 #include <i386/vmem_mgr.h>
+
+extern void* kheap_start;
+extern void* kheap_end;
 
 void mm_init(multiboot_info_t* mbt)
 {
@@ -26,7 +31,7 @@ void mm_init(multiboot_info_t* mbt)
 	{
 		// mark regions labeled "available" as free for use
 		if(mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
-			pmem_mgr_free_region(mmap->addr, mmap->addr+mmap->len-1);
+			pmem_mgr_free_region(mmap->addr, mmap->addr+mmap->len-1); 
 		// move to next entry
 		mmap = (multiboot_memory_map_t*)
 			((unsigned int)mmap + mmap->size + sizeof(unsigned int));
@@ -36,11 +41,31 @@ void mm_init(multiboot_info_t* mbt)
 	pmem_mgr_reserve_region(KERNEL_PADDR, KERNEL_PADDR+KERNEL_MSIZE-1);
 
 	// initialize the virtual memory manager
+	// this maps the kernel to its virtual home
 	vmem_mgr_init();
-
-	// map the kernel to its virtual home
-	//vmem_mgr_map_kernel();
 
 	// enable paging
 	vmem_mgr_enable_paging();
+	
+	// setup the kernel heap
+	// TODO: these need to be virtual addresses, not physical...
+	// TODO: we should probably update the vmem_mgr's static variables too...
+	kheap_init(&kheap_start, &kheap_end);
+	
+	// TESTING BELOW, DELETE WHEN DONE
+	//while(1)
+	//{
+	//	tty_putv("alloc:", (uint32_t)kmalloc(1024*64-4), " ");
+	//	kheap_available();
+	//	tty_getchar();
+	//}
+	//kheap_available();
+	//void* test1 = kmalloc(1024*512);tty_putv("alloc:", (uint32_t)test1, "\n");
+	//kheap_available();
+	//void* test2 = kmalloc(1024*512);tty_putv("alloc:", (uint32_t)test2, "\n");
+	//kheap_available();
+	//kfree(test1);tty_putv("free:", (uint32_t)test1, "\n");
+	//kheap_available();
+	//kfree(test2);tty_putv("free:", (uint32_t)test2, "\n");
+	//kheap_available();
 }

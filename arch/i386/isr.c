@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <kernel/tty.h>
 #include <kernel/error.h>
 #include <i386/idt.h>
 #include <i386/pic.h>
@@ -16,6 +17,8 @@ void isr_handler(uint8_t interrupt, uint32_t error)
 	{
 		(specific_handler[interrupt])(error);
 	} else {
+		tty_putv("\n\ninterrupt# ", interrupt, "");
+		tty_putv(" error# ", error, "");
 		kpanic("uncaught interrupt");
 	}
 
