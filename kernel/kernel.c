@@ -2,12 +2,11 @@
 #include <stdint.h>
 
 #include <kernel/multiboot.h>
-#include <kernel/tty.h>
-#include <kernel/mm.h>
-#include <kernel/kalloc.h>
-#include <kernel/arch.h>
-#include <kernel/error.h>
 #include <kernel/string.h>
+#include <kernel/error.h>
+#include <kernel/tty.h>
+#include <kernel/arch.h>
+#include <kernel/mm.h>
 
 // assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
@@ -21,9 +20,8 @@
 void kmain(multiboot_info_t* mbt)
 {
 	tty_init(); // terminal
-	mm_init(mbt); // memory managers
-	kheap_init(); // kernel heap
 	arch_init(); // architecture unique stuff
+	mm_init(mbt); // memory management setup
 
 	for(;;)
 		tty_putchar(tty_getchar());
