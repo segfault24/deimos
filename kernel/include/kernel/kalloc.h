@@ -3,7 +3,8 @@
 
 #include <stddef.h>
 
-void kheap_init();
+void kheap_init(void* start, void* end);
+size_t kheap_available();
 
 void* kmalloc(size_t size);
 void* kcalloc(size_t num, size_t size);
