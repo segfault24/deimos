@@ -15,6 +15,7 @@ void pmem_mgr_init();
 void pmem_mgr_free_region(phys_addr start, phys_addr end);
 void pmem_mgr_reserve_region(phys_addr start, phys_addr end);
 
+// for getting the status of the physical memory
 uint32_t pmem_total_blocks();
 uint32_t pmem_free_blocks();
 uint32_t pmem_used_blocks();
