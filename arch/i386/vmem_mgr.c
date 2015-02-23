@@ -1,6 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
+
+#include <kernel/tty.h>
 #include <kernel/error.h>
+#include <i386/boot.h>
+#include <i386/isr.h>
 #include <i386/pmem_mgr.h>
 #include <i386/vmem_pd.h>
 #include <i386/vmem_pt.h>
@@ -81,6 +85,19 @@ uint8_t vmem_mgr_is_paging()
 /* THE REAL MAGIC HAPPENS IN THE FUNCTIONS BELOW */
 /*************************************************/
 
+// TODO: page faults
+void vmem_mgr_pf_handler()
+{
+	uint32_t cr2;
+	
+	// get the faulty address from CR2
+	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
+	tty_putv("page fault at: ", cr2, "\n");
+	while(1);
+	// get a phys page
+	// map it into the directory/table
+}
+
 void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 {
 	page_directory* pd;
@@ -103,6 +120,7 @@ void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 		{
 			// we couldnt allocate a new table
 			// TODO: swapping?
+			kpanic("out of physical memory");
 			return;
 		}
 
@@ -170,7 +188,7 @@ void vmem_mgr_init()
 
 	// map 0-4MiB to 3GiB
 	paddr = 0x00000000;
-	vaddr = 0xC0000000;
+	vaddr = KERNEL_VADDR;
 	for(i=0; i<PT_PAGES_PER_TABLE; i++)
 	{
 		// set table entry
@@ -204,7 +222,8 @@ void vmem_mgr_init()
 	pd_entry_set_attrib(pde, PD_ENTRY_WRITABLE);
 	pd_entry_set_attrib(pde, PD_ENTRY_PRESENT);
 
-	// switch to our directory and enable paging
+	// register our page fault handler, switch to
+	// our directory, and finally enable paging
+	isr_register_isr(14, &vmem_mgr_pf_handler);
 	vmem_mgr_switch_directory(pd);
-	vmem_mgr_enable_paging();
 }

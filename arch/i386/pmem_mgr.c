@@ -2,7 +2,15 @@
 #include <stdint.h>
 #include <i386/pmem_mgr.h>
 
-// 0=free, 1=used
+// we keep track of memory that has been allcoated using
+// a bitmap. each bit corresponds to a block and its status
+// is indicated by:
+// 0=free
+// 1=used
+// we assume nothing for actual available physical memory
+// except that there's a max of 4GiB and later initialize
+// by reading from the multiboot struct
+
 static uint32_t pmem_bitmap[PMEM_MAX_ENTRIES];
 static uint32_t pmem_num_total_blocks = 0;
 static uint32_t pmem_num_free_blocks = 0;
