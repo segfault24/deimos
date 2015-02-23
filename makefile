@@ -6,12 +6,8 @@ ARCHDIR=arch/$(ARCH)
 # compiler and linker locations & options
 AR=/home/austin/opt/cross/bin/i686-elf-ar
 CC=/home/austin/opt/cross/bin/i686-elf-gcc
-CFLAGS=-g -ffreestanding -fbuiltin -Wall -Werror -Wextra -I$(KINC) -I$(AINC)
+CFLAGS=-g -ffreestanding -fbuiltin -Wall -Werror -Wextra -Iinclude
 LDFLAGS=-nostdlib -lgcc
-
-# include directories
-AINC=$(ARCHDIR)/include
-KINC=kernel/include
 
 #ARCHOBJS
 include $(ARCHDIR)/make.config
@@ -24,8 +20,8 @@ OSOBJS=$(ARCHOBJS) $(KERNELOBJS)
 _all: all
 
 # compile kernel
-deimos.bin: $(OSOBJS) $(ARCHDIR)/kernel.lnk
-	$(CC) -T $(ARCHDIR)/kernel.lnk -o $@ $(OSOBJS) $(CFLAGS) $(LDFLAGS)
+deimos.bin: $(OSOBJS) $(ARCHDIR)/kernel.ld
+	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(OSOBJS) $(CFLAGS) $(LDFLAGS)
 
 # generic compile rules
 %.o: %.c
