@@ -3,8 +3,11 @@
 
 #include <stdint.h>
 
-inline void isr_enable_interrupts();
-inline void isr_disable_interrupts();
+typedef struct _regs_t {
+    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax; // from pushal
+    unsigned int int_no, err_code; // from our isr wrappers
+    unsigned int eip, cs, eflags, useresp, ss; // cpu automatically pushes these
+} regs_t;
 
 // wrapper stubs that call our generic interrupt handler
 extern void isr0w();  // divide by zero
@@ -45,7 +48,7 @@ extern void isr46w(); // primary ATA hard disk
 extern void isr47w(); // secondary ATA hard disk
 
 // generic interrupt handler for use only by the asm wrappers
-void isr_handler(uint8_t interrupt, uint32_t error);
+void isr_handler(regs_t regs);
 
 // These are wrappers for functions in i386/idt.h that also perform
 // the necessary setup and clean up for the differences between
@@ -56,6 +59,9 @@ void isr_handler(uint8_t interrupt, uint32_t error);
 // Error numbers have no meaning for IRQs, and can be discarded.
 void isr_register_isr(uint8_t interrupt, void (*func_ptr));
 void isr_clear_isr(uint8_t interrupt);
+
+inline void isr_enable_interrupts();
+inline void isr_disable_interrupts();
 
 void isr_init();
 
