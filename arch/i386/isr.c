@@ -10,28 +10,27 @@
 static uint8_t handler_exists[IDT_NUM_ENTRIES];
 static void (*specific_handler[IDT_NUM_ENTRIES]) (uint32_t error);
 
-void isr_handler(uint8_t interrupt, uint32_t error)
+void isr_handler(regs_t regs)
 {
 	// if there is a handler registered with us, call it
-	if(handler_exists[interrupt])
+	if(handler_exists[regs.int_no])
 	{
-		(specific_handler[interrupt])(error);
+		(specific_handler[regs.int_no])(regs.err_code);
 	} else {
-		tty_putv("\n\ninterrupt# ", interrupt, "");
-		tty_putv(" error# ", error, "");
+		tty_putv("\n\ninterrupt# ", regs.int_no, "");
+		tty_putv(" error# ", regs.err_code, "");
 		kpanic("uncaught interrupt");
 	}
 
 	// if the interrupt was an IRQ, tell the PIC we're done
-	if(interrupt > 31 && interrupt < 48)
-		pic_send_eoi(interrupt - 32);
+	if(regs.int_no > 31 && regs.int_no < 48)
+		pic_send_eoi(regs.int_no - 32);
 }
 
 inline void isr_enable_interrupts()
 {
 	__asm__ volatile ( "sti" );
 }
-
 inline void isr_disable_interrupts()
 {
 	__asm__ volatile ( "cli" );
