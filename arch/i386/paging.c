@@ -5,13 +5,13 @@
 void pde_set_attrib(pd_entry* e, uint32_t attrib){*e |= attrib;}
 void pde_clear_attrib(pd_entry* e, uint32_t attrib){*e &= ~attrib;}
 uint32_t pde_get_attrib(pd_entry* e, uint32_t attrib){return *e & attrib;}
-void pde_set_frame(pd_entry* e, void* paddr){*e = (*e & ~PDE_FRAME) | (paddr & PDE_FRAME);}
-void* pde_get_frame(pd_entry* e){return *e & PDE_FRAME;}
+void pde_set_frame(pd_entry* e, phys_addr addr){*e = (*e & ~PDE_FRAME) | (addr & PDE_FRAME);}
+phys_addr pde_get_frame(pd_entry* e){return *e & PDE_FRAME;}
 
-pd_entry* pd_lookup(page_directory* pd, void* vaddr)
+pd_entry* pd_lookup(page_directory_t* pd, virt_addr addr)
 {
 	if(pd)
-		return &(pd->entries[vaddr>>22 & 0x3FF]);
+		return &(pd->entries[addr>>22 & 0x3FF]);
 	return 0;
 }
 
@@ -19,13 +19,13 @@ pd_entry* pd_lookup(page_directory* pd, void* vaddr)
 void pte_set_attrib(pt_entry* e, uint32_t attrib){*e |= attrib;}
 void pte_clear_attrib(pt_entry* e, uint32_t attrib){*e &= ~attrib;}
 uint32_t pte_get_attrib(pt_entry* e, uint32_t attrib){return *e & attrib;}
-void pte_set_frame(pt_entry* e, void* paddr){*e = (*e & ~PTE_FRAME) | (paddr & PTE_FRAME);}
-void* pte_get_frame(pt_entry* e){return *e & PTE_FRAME;}
+void pte_set_frame(pt_entry* e, phys_addr addr){*e = (*e & ~PTE_FRAME) | (addr & PTE_FRAME);}
+phys_addr pte_get_frame(pt_entry* e){return *e & PTE_FRAME;}
 
-pt_entry* pt_lookup(page_table* pt, void* vaddr)
+pt_entry* pt_lookup(page_table_t* pt, virt_addr addr)
 {
 	if(pt)
-		return &(pt->entries[vaddr>>12 & 0x3FF]);
+		return &(pt->entries[addr>>12 & 0x3FF]);
 	return 0;
 }
 

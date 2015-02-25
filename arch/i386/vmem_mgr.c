@@ -8,16 +8,16 @@
 #include <i386/pmem_mgr.h>
 #include <i386/vmem_mgr.h>
 
-static page_directory* cur_page_dir = 0;
-static phys_addr cur_page_dir_phys_addr = 0;
+static page_directory_t* cur_page_dir = 0;
+static phys_addr cur_page_dir_phys = 0;
 
 uint8_t vmem_mgr_alloc_page(pt_entry* e)
 {
 	phys_addr p = pmem_mgr_alloc();
 	if(p)
 	{
-		pt_entry_set_frame(e, p);
-		pt_entry_set_attrib(e, PT_ENTRY_PRESENT);
+		pte_set_frame(e, p);
+		pte_set_attrib(e, PTE_PRESENT);
 		return 1;
 	}
 	return 0;
@@ -25,25 +25,25 @@ uint8_t vmem_mgr_alloc_page(pt_entry* e)
 
 void vmem_mgr_free_page(pt_entry* e)
 {
-	phys_addr p = pt_entry_get_frame(*e);
+	phys_addr p = pte_get_frame(e);
 	if(p)
 		pmem_mgr_free(p);
-	pt_entry_remove_attrib(e, PT_ENTRY_PRESENT);
+	pte_clear_attrib(e, PTE_PRESENT);
 }
 
-inline page_directory* vmem_mgr_get_directory()
+page_directory_t* vmem_mgr_get_directory()
 {
 	return cur_page_dir;
 }
 
-inline uint8_t vmem_mgr_switch_directory(page_directory* pd)
+uint8_t vmem_mgr_switch_directory(page_directory_t* pd)
 {
 	if(pd)
 	{
 		cur_page_dir = pd;
-		cur_page_dir_phys_addr = (phys_addr)&(pd->entries);
+		cur_page_dir_phys = (phys_addr)&(pd->entries);
 		__asm__ volatile (	"movl %0, %%cr3"
-							: :"rm"(cur_page_dir_phys_addr) );
+							: :"rm"(cur_page_dir_phys) );
 		return 1;
 	}
 	return 0;
@@ -75,9 +75,9 @@ void vmem_mgr_pf_handler()
 
 void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 {
-	page_directory* pd;
+	page_directory_t* pd;
 	pd_entry* pde;
-	page_table* pt;
+	page_table_t* pt;
 	pt_entry* pte;
 	size_t i;
 
@@ -87,10 +87,10 @@ void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 	pde = pd_lookup(pd, vaddr);
 
 	// does the table exist?
-	if(!pd_entry_is_present(*pde))
+	if(!pde_get_attrib(pde, PDE_PRESENT))
 	{
 		// the table is not present, create a new one
-		pt = (page_table*)pmem_mgr_alloc();
+		pt = (page_table_t*)pmem_mgr_alloc();
 		if(!pt)
 		{
 			// we couldnt allocate a new table
@@ -105,18 +105,18 @@ void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr)
 
 		// create a new directory entry for the table
 		*pde = 0;
-		pd_entry_set_frame(pde, (phys_addr)pt);
-		pd_entry_set_attrib(pde, PD_ENTRY_WRITABLE);
-		pd_entry_set_attrib(pde, PD_ENTRY_PRESENT);
+		pde_set_frame(pde, (phys_addr)pt);
+		pde_set_attrib(pde, PDE_WRITABLE);
+		pde_set_attrib(pde, PDE_PRESENT);
 	}
 	// get the table and associated entry
-	pt = (page_table*)(*pde & ~0xfff);
+	pt = (page_table_t*)(*pde & ~0xfff);
 	pte = pt_lookup(pt, vaddr);
 
 	// perform the mapping
-	pt_entry_set_frame(pte, paddr);
-	pt_entry_set_attrib(pte, PT_ENTRY_WRITABLE);
-	pt_entry_set_attrib(pte, PT_ENTRY_PRESENT);
+	pte_set_frame(pte, paddr);
+	pte_set_attrib(pte, PTE_WRITABLE);
+	pte_set_attrib(pte, PTE_PRESENT);
 
 	// flush the corresponding TLB entry
 	vmem_mgr_flush_tlb_entry(vaddr);
@@ -130,17 +130,17 @@ void vmem_mgr_init()
 	pt_entry* pte;
 	pd_entry* pde;
 
-	page_table* pt;
-	page_table* pt2;
-	page_directory* pd;
+	page_table_t* pt;
+	page_table_t* pt2;
+	page_directory_t* pd;
 
 	// allocate default page table
-	pt = (page_table*)pmem_mgr_alloc();
+	pt = (page_table_t*)pmem_mgr_alloc();
 	if(!pt)
 		kpanic("could not allocate memory for kernel initialization");
 
 	// allocate 3GiB page table
-	pt2 = (page_table*)pmem_mgr_alloc();
+	pt2 = (page_table_t*)pmem_mgr_alloc();
 	if(!pt2)
 		kpanic("could not allocate memory for kernel initialization");
 
@@ -153,9 +153,9 @@ void vmem_mgr_init()
 		// set table entry
 		pte = pt_lookup(pt2, vaddr);
 		*pte = 0;
-		pt_entry_set_frame(pte, paddr);
+		pte_set_frame(pte, paddr);
 		// TODO: should this be writable?
-		pt_entry_set_attrib(pte, PT_ENTRY_PRESENT);
+		pte_set_attrib(pte, PTE_PRESENT);
 
 		paddr += VMEM_PAGE_SIZE;
 		vaddr += VMEM_PAGE_SIZE;
@@ -169,16 +169,16 @@ void vmem_mgr_init()
 		// set table entry
 		pte = pt_lookup(pt, vaddr);
 		*pte = 0;
-		pt_entry_set_frame(pte, paddr);
+		pte_set_frame(pte, paddr);
 		// TODO: should this be writable?
-		pt_entry_set_attrib(pte, PT_ENTRY_PRESENT);
+		pte_set_attrib(pte, PTE_PRESENT);
 
 		paddr += VMEM_PAGE_SIZE;
 		vaddr += VMEM_PAGE_SIZE;
 	}
 
 	// create default directory
-	pd = (page_directory*)pmem_mgr_alloc();
+	pd = (page_directory_t*)pmem_mgr_alloc();
 	if(!pd)
 		kpanic("could not allocate memory for kernel initialization");
 
@@ -188,14 +188,14 @@ void vmem_mgr_init()
 
 	// add the tables to the directory
 	pde = pd_lookup(pd, 0xC0000000);
-	pd_entry_set_frame(pde, (phys_addr)pt);
-	pd_entry_set_attrib(pde, PD_ENTRY_WRITABLE);
-	pd_entry_set_attrib(pde, PD_ENTRY_PRESENT);
+	pde_set_frame(pde, (phys_addr)pt);
+	pde_set_attrib(pde, PDE_WRITABLE);
+	pde_set_attrib(pde, PDE_PRESENT);
 
 	pde = pd_lookup(pd, 0x00000000);
-	pd_entry_set_frame(pde, (phys_addr)pt2);
-	pd_entry_set_attrib(pde, PD_ENTRY_WRITABLE);
-	pd_entry_set_attrib(pde, PD_ENTRY_PRESENT);
+	pde_set_frame(pde, (phys_addr)pt2);
+	pde_set_attrib(pde, PDE_WRITABLE);
+	pde_set_attrib(pde, PDE_PRESENT);
 
 	// register our page fault handler, switch to
 	// our directory, and finally enable paging

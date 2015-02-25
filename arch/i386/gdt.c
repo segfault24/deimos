@@ -1,8 +1,8 @@
 #include <i386/gdt.h>
 
-static gdt_entry gdt[GDT_NUM_ENTRIES];
+static gdt_entry_t gdt[GDT_NUM_ENTRIES];
 
-static gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
+static gdt_entry_t gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
 {
 	uint64_t desc;
 
@@ -21,12 +21,12 @@ static gdt_entry gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)
 	desc |= base<<16     & 0xFFFF0000; // base 0:15
 	desc |= limit        & 0x0000FFFF; // limit 0:15
 
-	return (gdt_entry)desc;
+	return (gdt_entry_t)desc;
 }
 
 void gdt_init()
 {
-	gptr.size = GDT_NUM_ENTRIES*(sizeof(gdt_entry)) - 1;
+	gptr.size = GDT_NUM_ENTRIES*(sizeof(gdt_entry_t)) - 1;
 	gptr.offset = (uint32_t)&gdt;
 
 	// null descriptor
