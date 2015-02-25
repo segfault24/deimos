@@ -1,10 +1,13 @@
 #ifndef KERNEL_SCHED_H
 #define KERNEL_SCHED_H
 
-// asdf
-void do_scheduling();
+#include <i386/isr.h>
 
-// asdf
+// called by the programmable timer interrupt
+// does the main bit of scheduling
+void do_scheduling(unsigned int ticks, regs_t* regs);
+
+// uhhhhh, need something to start new processes
 int fork();
 
 #endif
