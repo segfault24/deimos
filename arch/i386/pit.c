@@ -1,14 +1,16 @@
 #include <stdint.h>
 
+#include <kernel/sched.h>
 #include <i386/ioasm.h>
 #include <i386/isr.h>
 #include <i386/pit.h>
 
-static uint32_t ticks = 0;
+static unsigned int ticks = 0;
 
-static void tmr_isr()
+static void tmr_isr(regs_t* regs)
 {
 	ticks++;
+	do_scheduling(ticks, regs);
 }
 
 void pit_init()
