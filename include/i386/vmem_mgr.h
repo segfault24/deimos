@@ -4,10 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <i386/pmem_mgr.h>
-#include <i386/vmem_pd.h>
-#include <i386/vmem_pt.h>
-
 // virtual page size == physical block size
 #define VMEM_PAGE_SIZE PMEM_BLOCK_SIZE
 
@@ -21,13 +17,9 @@ inline page_directory* vmem_mgr_get_directory();
 // switch in a new directory
 inline uint8_t vmem_mgr_switch_directory(page_directory* pd);
 // flush an entry from the TLB
-void vmem_mgr_flush_tlb_entry(virt_addr vaddr);
+void vmem_mgr_flush_tlb_entry(void* vaddr);
 
-void vmem_mgr_enable_paging();
-void vmem_mgr_disable_paging();
-uint8_t vmem_mgr_is_paging();
-
-void vmem_mgr_map_page(phys_addr paddr, virt_addr vaddr);
+void vmem_mgr_map_page(void* paddr, void* vaddr);
 void vmem_mgr_pf_handler();
 void vmem_mgr_init();
 
