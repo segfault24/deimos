@@ -1,3 +1,11 @@
+.global boot
+.extern kmain
+
+#.global kstack_top
+#.global kstack_bottom
+
+.set KERNEL_VMA, 0xC0000000 # 3GiB
+
 # multiboot setup stuff
 .set ALIGN,     1<<0                # aligning stuff on page boundaries
 .set MEMINFO,   1<<1                # mem map?
@@ -12,46 +20,96 @@
 .long FLAGS
 .long CHECKSUM
 
-# kernel heap
-.section .kheap, "aw", @nobits
-.global kheap_start
-.global kheap_end
-kheap_start:
-.skip 1048576 # 1 MiB
-kheap_end:
-
 # kernel stack
 .section .kstack, "aw", @nobits
-.global kstack_top
-.global kstack_bottom
 kstack_top:
-.skip 16384 # 16 KiB
+.skip 0x4000 # 16 KiB
 kstack_bottom:
 
-# this is our entry point that is called by GRUB
-# we need to grab the multiboot info structure address,
-# drop back to real mode to get the memory map from BIOS,
-# and then call the main kernel body, which will do what
-# it needs to put us back in protected mode
+# kernel page directory
+.section .data
+.align 0x1000
+kernel_pd:
+	.space 0x1000, 0x00
 
+# This is our entry point that is called by GRUB.
+# We need to grab the multiboot info structure address,
+# setup paging, and jump to the higher kernel.
+# In this area, we need to subtract the kernels virtual
+# base because we link the kernel using its virtual home
+# but we start in physical memory
 .section .text
-.extern kmain
-.global boot
 boot:
-	# setup our stack as the very first thing
-	movl $kstack_bottom, %esp
+	# setup the stack (adjusting to physical addr)
+	mov $kstack_bottom, %esp
+	sub $KERNEL_VMA, %esp
 	
 	# ebx contains the multiboot info structure address
-	pushl %ebx
-
-	# start the main body of the kernel
-	call kmain
+	# note that this is a physical address
+	push %ebx
 	
-	# kmain shouldn't return, but just in case, hang
-	cli
-	jmp hang
+	### do the paging setup
+	##################
+	# if we want to get creative with paging setup later, see here:
+	# http://wiki.osdev.org/User:Mduft/HigherHalf_Kernel_with_32-bit_Paging
+	##################
+	# identity mapping using 4MiB page table
+	mov $kernel_pd, %eax		# get the page directory
+	sub $KERNEL_VMA, %eax		# adjust to physical
+	mov $0x00000083, %edx
+	mov %edx, (%eax)			# set the directory entry
+	
+	# virtual mapping using 4MiB page table
+	push %eax					# save the pd address
+	mov $KERNEL_VMA, %eax		# get the virtual offset
+	shr $22, %eax
+	mov $4, %ecx
+	mul %ecx
+	mov %eax, %edx				# edx now contains the index offset for the second entry
+	pop %eax					# restore the pd address
+	add %edx, %eax				# move to the correct pd entry
+	mov $0x00000083, %edx
+	mov %edx, (%eax)			# set the directory entry
+	
+	# enable 4MiB pages
+	mov %cr4, %ecx
+	or $0x00000010, %ecx
+	mov %ecx, %cr4
+	
+	# load the kernel page directory
+	mov $kernel_pd, %ecx
+	sub $KERNEL_VMA, %ecx
+	mov %ecx, %cr3
+	
+	# enable paging
+	mov %cr0, %ecx
+	or $0x80000000, %ecx
+	mov %ecx, %cr0
+	
+	# long jump to the higher half of the kernel
+	lea higherhalfboot, %ecx
+	jmp *%ecx
 
-hang:
+higherhalfboot:
+	# adjust the stack to its virtual home
+	add $KERNEL_VMA, %esp
+	mov %esp, %ebp
+	
+	# we can now unmap the identity mapping
+	mov $kernel_pd, %eax
+	mov $0x00, %edx
+	mov %edx, (%eax)
+	invlpg (0)
+	
+	# jump into our main kernel C code
+	call kmain
 	hlt
-	jmp hang
 
+##################
+# kernel heap
+#.section .kheap, "aw", @nobits
+#.global kheap_start
+#.global kheap_end
+#kheap_start:
+#.skip 0x100000 # 1 MiB
+#kheap_end:

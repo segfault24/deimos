@@ -8,14 +8,14 @@
 #include <i386/isr.h>
 
 static uint8_t handler_exists[IDT_NUM_ENTRIES];
-static void (*specific_handler[IDT_NUM_ENTRIES]) (uint32_t error);
+static void (*specific_handler[IDT_NUM_ENTRIES]) (regs_t* regs);
 
 void isr_handler(regs_t regs)
 {
 	// if there is a handler registered with us, call it
 	if(handler_exists[regs.int_no])
 	{
-		(specific_handler[regs.int_no])(regs.err_code);
+		(specific_handler[regs.int_no])(&regs);
 	} else {
 		tty_putv("\n\ninterrupt# ", regs.int_no, "");
 		tty_putv(" error# ", regs.err_code, "");
