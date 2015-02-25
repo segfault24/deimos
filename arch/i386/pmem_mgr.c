@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <i386/paging.h>
 #include <i386/pmem_mgr.h>
 
 // we keep track of memory that has been allcoated using

@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+typedef uint32_t phys_addr;
+typedef uint32_t virt_addr;
+
 /********************************************/
 /***** PAGE DIRECTORY UTILITY FUNCTIONS *****/
 /********************************************/
@@ -24,18 +27,18 @@ typedef uint32_t pd_entry;
 
 typedef struct {
 	pd_entry entries[PD_TABLES_PER_DIR];
-} page_directory;
+} page_directory_t;
 
 void pde_set_attrib(pd_entry* e, uint32_t attrib);
 void pde_clear_attrib(pd_entry* e, uint32_t attrib);
 uint32_t pde_get_attrib(pd_entry* e, uint32_t attrib);
 
-void pde_set_frame(pd_entry* e, void* paddr);
-void* pde_get_frame(pd_entry* e);
+void pde_set_frame(pd_entry* e, phys_addr addr);
+phys_addr pde_get_frame(pd_entry* e);
 
 /* returns a pointer to the corresponding directory */
 /* entry given a directory pointer and virtual addr */
-pd_entry* pd_lookup(page_directory* pd, void* vaddr);
+pd_entry* pd_lookup(page_directory_t* pd, virt_addr vaddr);
 
 
 /****************************************/
@@ -54,21 +57,21 @@ pd_entry* pd_lookup(page_directory* pd, void* vaddr);
 
 #define PT_PAGES_PER_TABLE 1024
 
-typedef unint32_t pt_entry;
+typedef uint32_t pt_entry;
 
 typedef struct {
 	pt_entry entries[PT_PAGES_PER_TABLE];
-} page_table;
+} page_table_t;
 
-inline void pte_set_attrib(pt_entry* e, uint32_t attrib);
-inline void pte_clear_attrib(pt_entry* e, uint32_t attrib);
-inline void pte_get_attrib(pt_entry* e, uint32_t attrib);
+void pte_set_attrib(pt_entry* e, uint32_t attrib);
+void pte_clear_attrib(pt_entry* e, uint32_t attrib);
+uint32_t pte_get_attrib(pt_entry* e, uint32_t attrib);
 
-inline void pte_set_frame(pt_entry* e, void* addr);
-inline void* pte_get_frame(pt_entry* e);
+void pte_set_frame(pt_entry* e, phys_addr addr);
+phys_addr pte_get_frame(pt_entry* e);
 
 /* returns a pointer to the corresponding table */
 /* entry given a table pointer and a virtual addr */
-inline pt_entry* pt_lookup(page_table* pt, void* addr);
+pt_entry* pt_lookup(page_table_t* pt, virt_addr addr);
 
 #endif

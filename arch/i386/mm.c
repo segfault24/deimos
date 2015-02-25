@@ -8,6 +8,7 @@
 
 #include <i386/boot.h>
 #include <i386/pmem_mgr.h>
+#include <i386/paging.h>
 #include <i386/vmem_mgr.h>
 
 //extern void* kheap_start;
@@ -44,8 +45,6 @@ void mm_init(multiboot_info_t* mbt)
 	// this maps the kernel to its virtual home
 	vmem_mgr_init();
 
-	// enable paging
-	vmem_mgr_enable_paging();
 	
 	// setup the kernel heap
 	// TODO: these need to be virtual addresses, not physical...
