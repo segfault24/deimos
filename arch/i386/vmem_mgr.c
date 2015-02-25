@@ -6,8 +6,6 @@
 #include <i386/boot.h>
 #include <i386/isr.h>
 #include <i386/pmem_mgr.h>
-#include <i386/vmem_pd.h>
-#include <i386/vmem_pt.h>
 #include <i386/vmem_mgr.h>
 
 static page_directory* cur_page_dir = 0;
@@ -56,29 +54,6 @@ void vmem_mgr_flush_tlb_entry(virt_addr addr)
 	__asm__ volatile (	"cli;"
 						"invlpg %0;"
 						"sti;" : :"rm"(addr) );
-}
-
-void vmem_mgr_enable_paging()
-{
-	__asm__ volatile (	"movl %%cr0, %%eax;"
-						"or $0x80000000, %%eax;"
-						"movl %%eax, %%cr0;" : : );
-}
-
-void vmem_mgr_disable_paging()
-{
-	__asm__ volatile (	"movl %%cr0, %%eax;"
-						"and $0x7FFFFFFF, %%eax;"
-						"movl %%eax, %%cr0;" : : );
-}
-
-uint8_t vmem_mgr_is_paging()
-{
-	uint32_t cr0;
-	__asm__ volatile (	"movl %%cr0, %%eax;"
-						"and $0x80000000, %%eax;"
-						"movl %%eax, %0;" :"=rm"(cr0) : );
-	return (uint8_t)(cr0 ? 1 : 0);
 }
 
 /*************************************************/
