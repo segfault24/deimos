@@ -34,16 +34,16 @@ typedef union
 		uint16_t offset_hi;
 	} fields;
 	uint64_t bits;
-} __attribute__((packed)) idt_entry;
+} __attribute__((packed)) idt_entry_t;
 
 
 typedef struct
 {
 	uint16_t size;
 	uint32_t offset;
-} __attribute__((packed)) idt_ptr;
+} __attribute__((packed)) idt_ptr_t;
 
-idt_ptr iptr;
+idt_ptr_t iptr;
 
 // registers an isr in the idt
 void idt_register_isr(uint8_t interrupt, void (*func_ptr));

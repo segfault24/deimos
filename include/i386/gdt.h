@@ -36,15 +36,15 @@ typedef union
 		uint8_t base_hi;
 	} fields;
 	uint64_t bits;
-} __attribute__((packed)) gdt_entry;
+} __attribute__((packed)) gdt_entry_t;
 
 typedef struct
 {
 	uint16_t size;
 	uint32_t offset;
-} __attribute__((packed)) gdt_ptr;
+} __attribute__((packed)) gdt_ptr_t;
 
-gdt_ptr gptr;
+gdt_ptr_t gptr;
 
 // sets up the table
 void gdt_init();
