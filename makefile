@@ -46,7 +46,7 @@ kernel: deimos.bin
 iso: deimos.iso
 
 run: iso
-	qemu -cdrom deimos.iso
+	qemu -cdrom deimos.iso -monitor stdio
 
 clean:
 	rm -f *.o */*.o */*/*.o deimos.bin deimos.iso
