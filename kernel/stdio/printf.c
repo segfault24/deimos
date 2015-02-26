@@ -32,6 +32,8 @@ void printf(const char* format, ...)
 					p = *arg++;
 					if (! p)
 						p = "(null)";
+					goto string;
+					break;
 				
 				string:
 					while (*p)
