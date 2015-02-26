@@ -103,29 +103,6 @@ void tty_puts(const char* str)
 	tty_updatecursor();
 }
 
-void tty_puti(uint32_t i)
-{
-	size_t j;
-
-	for(j=8; j>0; j--)
-	{
-		uint8_t hc = (i>>((j-1)*4)) & 0x0F;
-		if(hc < 0x0A)
-		{
-			tty_putchar((char)(hc+0x30)); // 0-9
-		} else {
-			tty_putchar((char)(hc+0x37)); // A-F
-		}
-	}
-}
-
-void tty_putv(const char* s1, uint32_t i, const char* s2)
-{
-	tty_puts(s1);
-	tty_puti(i);
-	tty_puts(s2);
-}
-
 void tty_clear()
 {
 	size_t i;
