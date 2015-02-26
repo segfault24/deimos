@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <kernel/tty.h>
+#include <kernel/stdio.h>
 #include <kernel/error.h>
 #include <i386/idt.h>
 #include <i386/pic.h>
@@ -17,8 +17,7 @@ void isr_handler(regs_t regs)
 	{
 		(specific_handler[regs.int_no])(&regs);
 	} else {
-		tty_putv("\n\ninterrupt# ", regs.int_no, "");
-		tty_putv(" error# ", regs.err_code, "");
+		printf("\ninterrupt# %x error# %x\n", regs.int_no, regs.err_code);
 		kpanic("uncaught interrupt");
 	}
 
@@ -31,6 +30,7 @@ inline void isr_enable_interrupts()
 {
 	__asm__ volatile ( "sti" );
 }
+
 inline void isr_disable_interrupts()
 {
 	__asm__ volatile ( "cli" );
