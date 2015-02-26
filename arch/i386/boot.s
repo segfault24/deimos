@@ -95,11 +95,13 @@ higherhalfboot:
 	add $KERNEL_VMA, %esp
 	mov %esp, %ebp
 	
+	# **removed this section so we can access the multiboot
+	#   struct properly from the higher kernel
 	# we can now unmap the identity mapping
-	mov $kernel_pd, %eax
-	mov $0x00, %edx
-	mov %edx, (%eax)
-	invlpg (0)
+	#mov $kernel_pd, %eax
+	#mov $0x00, %edx
+	#mov %edx, (%eax)
+	#invlpg (0)
 	
 	# jump into our main kernel C code
 	call kmain

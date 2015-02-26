@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <kernel/multiboot.h>
+#include <kernel/stdio.h>
 #include <i386/boot.h>
 #include <i386/paging.h>
 #include <i386/frame.h>
@@ -17,17 +18,17 @@ static size_t _num_total_frames = 0;
 static size_t _num_free_frames = 0;
 static size_t _num_used_frames = 0;
 
-static void set_bit(size_t b)
+static inline void set_bit(size_t b)
 {
 	frame_bitmap[b/32] |= (1 << (b%32));
 }
 
-static void clr_bit(size_t b)
+static inline void clr_bit(size_t b)
 {
 	frame_bitmap[b/32] &= ~(1 << (b%32));
 }
 
-static int get_bit(size_t b)
+static inline int get_bit(size_t b)
 {
 	return (frame_bitmap[b/32] & (1 << (b%32))) ? 1 : 0;
 }
@@ -35,7 +36,7 @@ static int get_bit(size_t b)
 static void free_region(phys_addr addr, size_t size)
 {
 	size_t i;
-
+	
 	for(i=addr/FRAME_SIZE; i<=(addr+size-1)/FRAME_SIZE; i++)
 	{
 		// if it isnt already freed (and not the zero block)
@@ -51,7 +52,7 @@ static void free_region(phys_addr addr, size_t size)
 static void reserve_region(phys_addr addr, size_t size)
 {
 	size_t i;
-
+	
 	for(i=addr/FRAME_SIZE; i<=(addr+size-1)/FRAME_SIZE; i++)
 	{
 		// if it isnt already used
@@ -69,6 +70,7 @@ static void reserve_region(phys_addr addr, size_t size)
 void frame_init(multiboot_info_t* mbt)
 {
 	size_t i;
+	
 	// clear the bitmap, mark all frames as used by default
 	for(i=0; i<MAX_FRAMES/sizeof(uint32_t); i++)
 		frame_bitmap[i] = 0xFFFFFFFF;
@@ -76,13 +78,14 @@ void frame_init(multiboot_info_t* mbt)
 	// get the multiboot memory map and its length
 	multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mbt->mmap_addr;
 	multiboot_uint32_t end = mbt->mmap_addr + mbt->mmap_length;
-
+	
 	// parse the memory map and configure the physical memory manager
 	while((multiboot_uint32_t)mmap < end)
 	{
 		// mark regions labeled "available" as free for use
 		if(mmap->type == MULTIBOOT_MEMORY_AVAILABLE)
 			free_region(mmap->addr, mmap->addr+mmap->len-1);
+		
 		// move to next entry
 		mmap = (multiboot_memory_map_t*)
 			((unsigned int)mmap + mmap->size + sizeof(unsigned int));
@@ -95,7 +98,7 @@ void frame_init(multiboot_info_t* mbt)
 phys_addr alloc_frame()
 {
 	size_t i, j, b;
-
+	
 	// search the bitmap for a free block
 	// i dont like nesting so much, but it's fairly simple
 	for(i=0; i<MAX_FRAMES/sizeof(uint32_t); i++)

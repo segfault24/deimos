@@ -1,27 +1,27 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <kernel/tty.h>
+#include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/kalloc.h>
 
 // TODO: improve this
 
-typedef struct _freeblk {
+typedef struct _freeblk_t {
 	size_t size;
-	struct _freeblk* next;
-	struct _freeblk* prev;
-} freeblk;
+	struct _freeblk_t* next;
+	struct _freeblk_t* prev;
+} freeblk_t;
 
-typedef struct _allochdr {
+typedef struct _allochdr_t {
 	size_t size;
-} allochdr;
+} allochdr_t;
 
-static freeblk* freelist;
+static freeblk_t* freelist;
 
 void kheap_init(void* start, void* end)
 {
-	freelist = (freeblk*)start;
+	freelist = (freeblk_t*)start;
 	freelist->size = end-start;
 	freelist->next = 0;
 	freelist->prev = 0;
@@ -30,7 +30,7 @@ void kheap_init(void* start, void* end)
 size_t kheap_available()
 {
 	size_t available;
-	freeblk* blk;
+	freeblk_t* blk;
 	
 	blk = freelist;
 	available = 0;
@@ -49,8 +49,8 @@ size_t kheap_available()
 
 void* kmalloc(size_t size)
 {
-	freeblk* blk;
-	allochdr* hdr;
+	freeblk_t* blk;
+	allochdr_t* hdr;
 
 	if(size == 0)
 		return 0;
@@ -58,13 +58,13 @@ void* kmalloc(size_t size)
 	blk = freelist;
 	while(blk != 0)
 	{
-		if(blk->size >= size+sizeof(allochdr))
+		if(blk->size >= size+sizeof(allochdr_t))
 		{
 			// found a big enough free block
-			if(blk->size-size-sizeof(allochdr) >= sizeof(freeblk))
+			if(blk->size-size-sizeof(allochdr_t) >= sizeof(freeblk_t))
 			{
 				// just reduce the free block's size
-				blk->size = blk->size-size-sizeof(allochdr);
+				blk->size = blk->size-size-sizeof(allochdr_t);
 				hdr = (void*)blk+blk->size;
 			}
 			else
@@ -85,7 +85,7 @@ void* kmalloc(size_t size)
 				//blk->prev = 0;
 			}
 			hdr->size = size;
-			return (void*)hdr+sizeof(allochdr);
+			return (void*)hdr+sizeof(allochdr_t);
 		}
 		// iterate to the next free block
 		blk = blk->next;
@@ -109,13 +109,13 @@ void* kcalloc(size_t num, size_t size)
 
 void kfree(void* ptr)
 {
-	freeblk* blk;
-	freeblk* cur;
-	allochdr* hdr;
+	freeblk_t* blk;
+	freeblk_t* cur;
+	allochdr_t* hdr;
 	
-	hdr = (void*)ptr-sizeof(allochdr);
+	hdr = (void*)ptr-sizeof(allochdr_t);
 	blk = (void*)hdr;
-	blk->size = hdr->size + sizeof(allochdr);
+	blk->size = hdr->size + sizeof(allochdr_t);
 	blk->next = 0;
 	blk->prev = 0;
 	

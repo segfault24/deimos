@@ -57,12 +57,14 @@ void isr_handler(regs_t regs);
 // Registered ISRs should be in the form "void fname(uint32_t error)".
 // These ISRs should be made as short as possible.
 // Error numbers have no meaning for IRQs, and can be discarded.
-void isr_register_isr(uint8_t interrupt, void (*func_ptr));
-void isr_clear_isr(uint8_t interrupt);
+void register_isr(uint8_t interrupt, void (*func_ptr));
+void clear_isr(uint8_t interrupt);
 
-inline void isr_enable_interrupts();
-inline void isr_disable_interrupts();
+void enable_interrupts();
+void disable_interrupts();
 
 void isr_init();
+
+void dump_regs(regs_t* regs);
 
 #endif
