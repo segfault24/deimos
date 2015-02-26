@@ -109,7 +109,7 @@ static void kbd_isr()
 void kbd_init()
 {
 	update_leds();
-	isr_register_isr(33, &kbd_isr);
+	register_isr(33, &kbd_isr);
 }
 
 uint8_t kbd_is_ascii_printable(uint8_t key)

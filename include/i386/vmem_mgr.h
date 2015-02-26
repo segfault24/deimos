@@ -5,7 +5,7 @@
 #include <i386/paging.h>
 
 // virtual page size == physical block size
-#define VMEM_PAGE_SIZE PMEM_BLOCK_SIZE
+#define PAGE_SIZE FRAME_SIZE
 
 // these functions interface with the physical memory
 // manager to allocate a physical block for the page
@@ -15,7 +15,7 @@ void vmem_mgr_free_page(pt_entry* e);
 // retrieve the current directory
 page_directory_t* vmem_mgr_get_directory();
 // switch in a new directory
-uint8_t vmem_mgr_switch_directory(page_directory_t* pd);
+void vmem_mgr_switch_directory(page_directory_t* pd);
 // flush an entry from the TLB
 void vmem_mgr_flush_tlb_entry(virt_addr addr);
 
