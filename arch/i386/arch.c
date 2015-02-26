@@ -1,5 +1,5 @@
 #include <kernel/arch.h>
-#include <kernel/tty.h>
+#include <kernel/stdio.h>
 
 #include <i386/gdt.h>
 #include <i386/idt.h>
