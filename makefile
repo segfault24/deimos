@@ -6,7 +6,7 @@ ARCHDIR=arch/$(ARCH)
 # compiler and linker locations & options
 AR=/home/austin/opt/cross/bin/i686-elf-ar
 CC=/home/austin/opt/cross/bin/i686-elf-gcc
-CFLAGS=-g -ffreestanding -fbuiltin -Wall -Werror -Wextra -Iinclude
+CFLAGS=-g -ffreestanding -fno-builtin -Wall -Werror -Wextra -Iinclude
 LDFLAGS=-nostdlib -lgcc
 
 #ARCHOBJS

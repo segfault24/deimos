@@ -1,9 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <kernel/multiboot.h>
+#include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/error.h>
+#include <kernel/multiboot.h>
 #include <kernel/tty.h>
 #include <kernel/arch.h>
 #include <kernel/mm.h>
@@ -24,5 +25,5 @@ void kmain(multiboot_info_t* mbt)
 	mm_init(mbt); // memory management setup
 
 	for(;;)
-		tty_putchar(tty_getchar());
+		putchar(getchar());
 }
