@@ -20,10 +20,12 @@
 
 #include <stddef.h>
 
-void kheap_init(void* start, void* end);
-size_t kheap_available();
+void kheap_init(void* start, size_t size);
+void kheap_print();
 
 void* kmalloc(size_t size);
+void* kmalloc_a(size_t size);
+void* kmalloc_ap(size_t size, phys_addr* p);
 void* kcalloc(size_t num, size_t size);
 
 void kfree(void* ptr);

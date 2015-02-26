@@ -27,6 +27,8 @@
 #include <i386/frame.h>
 #include <i386/paging.h>
 
+// provided by the linker script
+extern void* KERNEL_END;
 
 void mm_init(multiboot_info_t* mbt)
 {
@@ -41,63 +43,22 @@ void mm_init(multiboot_info_t* mbt)
 	paging_init();
 	
 	// setup the kernel heap
-	// TODO: these need to be virtual addresses, not physical...
-	// TODO: we should probably update the vmem_mgr's static variables too...
-	//kheap_init(&kheap_start, &kheap_end);
+	kheap_init(&KERNEL_END, KERNEL_VMA+KERNEL_PMA+KERNEL_SIZE-(int)&KERNEL_END);
 	
 	// TESTING BELOW, DELETE WHEN DONE
+	//kheap_print();
 	//while(1)
 	//{
-	//	tty_putv("alloc:", (uint32_t)kmalloc(1024*64-4), " ");
-	//	kheap_available();
-	//	tty_getchar();
+	//	printf("alloc:%x\n", kmalloc(1));
+	//	kheap_print();
+	//	getchar();
 	//}
-	//kheap_available();
-	//void* test1 = kmalloc(1024*512);tty_putv("alloc:", (uint32_t)test1, "\n");
-	//kheap_available();
-	//void* test2 = kmalloc(1024*512);tty_putv("alloc:", (uint32_t)test2, "\n");
-	//kheap_available();
-	//kfree(test1);tty_putv("free:", (uint32_t)test1, "\n");
-	//kheap_available();
-	//kfree(test2);tty_putv("free:", (uint32_t)test2, "\n");
-	//kheap_available();
+	//void* test1 = kmalloc(10);
+	//printf("alloc:%x\n", test1);kheap_print();
+	//void* test2 = kmalloc(10);
+	//printf("alloc:%x\n", test2);kheap_print();
+	//kfree(test2);
+	//printf("free:%x\n", test2);kheap_print();
+	//kfree(test1);
+	//printf("free:%x\n", test1);kheap_print();
 }
-
-/////////////////////////////////////////////////////////////////////
-//print_page_directory(vmem_mgr_get_directory());
-
-/*void print_page_table(pd_entry pde, size_t pdi, page_table* pt)
-{
-	pt_entry pte;
-	size_t i;
-
-	for(i=0; i<PT_PAGES_PER_TABLE; i+=16)
-	{
-		pte = pt->entries[i];
-		if(pt_entry_is_present(pte))
-		{
-			putv("PDE: ", (uint32_t)pde, "  ");
-			putv("PTE: ", (uint32_t)pte, "  ");
-			putv("VADDR: ", (uint32_t)(4096*(pdi*1024+i)), "  ");
-			putv("PADDR: ", (uint32_t)(pte & 0xFFFFF000), "\n");
-		}
-		tty_getchar();
-	}
-}
-
-void print_page_directory(page_directory* pd)
-{
-	pd_entry pde;
-	page_table* pt;
-	size_t i;
-
-	for(i=0; i<PD_TABLES_PER_DIR; i++)
-	{
-		pde = pd->entries[i];
-		if(pd_entry_is_present(pde))
-		{
-			pt = (page_table*)(pde & ~0xfff);
-			print_page_table(pde, i, pt);
-		}
-	}
-}*/

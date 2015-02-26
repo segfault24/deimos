@@ -46,5 +46,7 @@ SECTIONS
 		*(.bss)
 		*(.kstack)
 	}
+	
+	KERNEL_END = .;
 }
 

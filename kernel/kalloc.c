@@ -22,67 +22,36 @@
 #include <kernel/string.h>
 #include <kernel/kalloc.h>
 
-// TODO: improve this
-
-typedef struct _freeblk_t {
+typedef struct _header_t {
 	size_t size;
-	struct _freeblk_t* next;
-	struct _freeblk_t* prev;
-} freeblk_t;
+	int allocated;
+	struct _header_t* prev;
+	struct _header_t* next;
+} header_t;
 
-typedef struct _allochdr_t {
-	size_t size;
-} allochdr_t;
+static header_t* kheap;
 
-static freeblk_t* freelist;
-
-void kheap_init(void* start, void* end)
+// TODO: only up to the first 4KiB of memory returned
+// is guaranteed to be contiguoius in physical memory
+static void* kmalloc_int(size_t size, int align, phys_addr* p)
 {
-	freelist = (freeblk_t*)start;
-	freelist->size = end-start;
-	freelist->next = 0;
-	freelist->prev = 0;
-}
-
-size_t kheap_available()
-{
-	size_t available;
-	freeblk_t* blk;
+	header_t* h;
+	header_t* new_h;
 	
-	blk = freelist;
-	available = 0;
-	//tty_puts("heap:");
-	while(blk != 0)
-	{
-		//tty_putv("", (uint32_t)blk, "-");
-		//tty_putv("", (uint32_t)blk+blk->size, ">");
-		
-		available += blk->size;
-		blk = blk->next;
-	}
-	//tty_putv(" size:", available, "\n");
-	return available;
-}
-
-void* kmalloc(size_t size)
-{
-	freeblk_t* blk;
-	allochdr_t* hdr;
-
-	if(size == 0)
+	if(size == 0 || align != 0 || p != 0)
 		return 0;
-
-	blk = freelist;
-	while(blk != 0)
+	
+	h = kheap;
+	while(h != 0)
 	{
-		if(blk->size >= size+sizeof(allochdr_t))
+		// find a big enough free block
+		if((h->allocated == 0) && (h->size >= size + sizeof(header_t)))
 		{
-			// found a big enough free block
-			if(blk->size-size-sizeof(allochdr_t) >= sizeof(freeblk_t))
+			if(h->size >= size + 2*sizeof(header_t))
 			{
 				// just reduce the free block's size
-				blk->size = blk->size-size-sizeof(allochdr_t);
-				hdr = (void*)blk+blk->size;
+				h->size -= size + sizeof(header_t);
+				new_h = (void*)h + h->size;
 			}
 			else
 			{
@@ -101,53 +70,95 @@ void* kmalloc(size_t size)
 				//blk->next = 0;
 				//blk->prev = 0;
 			}
-			hdr->size = size;
-			return (void*)hdr+sizeof(allochdr_t);
+			new_h->size = size + sizeof(header_t);
+			new_h->allocated = 1;
+			
+			// insert the block into the list
+			if(h->next != 0)
+				h->next->prev = new_h;
+			new_h->next = h->next;
+			h->next = new_h;
+			new_h->prev = h;
+			
+			return (void*)new_h + sizeof(header_t);
 		}
 		// iterate to the next free block
-		blk = blk->next;
+		h = h->next;
 	}
-
+	
 	// never found a big enough block, fail
 	return 0;
+}
+
+void kheap_init(void* start, size_t size)
+{
+	kheap = (header_t*)start;
+	kheap->size = size;
+	kheap->allocated = 0;
+	kheap->next = 0;
+	kheap->prev = 0;
+}
+
+void kheap_print()
+{
+	header_t* h = kheap;
+	while(h)
+	{
+		printf(" %x %x %x %x %x\n", h, h->prev, h->next, h->allocated, h->size);
+		h = h->next;
+	}
+	printf("\n");
+}
+
+void kfree(void* ptr)
+{
+	header_t* h;
+	
+	h = (header_t*)(ptr - sizeof(header_t));
+	h->allocated = 0;
+	
+	// merge with next block if it's free
+	if(h->next && h->next->allocated == 0)
+	{
+		h->size += h->next->size;
+		if(h->next->next)
+			h->next->next->prev = h;
+		h->next = h->next->next;
+	}
+	
+	// merge with the prev block if it's free
+	if(h->prev && h->prev->allocated == 0)
+	{
+		h->prev->size += h->size;
+		if(h->next)
+			h->next->prev = h->prev;
+		h->prev->next = h->next;
+	}
+}
+
+void* kmalloc(size_t size)
+{
+	return kmalloc_int(size, 0, 0);
+}
+
+void* kmalloc_a(size_t size)
+{
+	return kmalloc_int(size, 1, 0);
+}
+
+void* kmalloc_ap(size_t size, phys_addr* p)
+{
+	return kmalloc_int(size, 1, p);
 }
 
 void* kcalloc(size_t num, size_t size)
 {
 	void* ptr;
-
+	
 	ptr = kmalloc(num*size);
 	if(!ptr)
 		return 0;
-
+	
 	memset(ptr, 0, num*size);
 	return ptr;
-}
-
-void kfree(void* ptr)
-{
-	freeblk_t* blk;
-	freeblk_t* cur;
-	allochdr_t* hdr;
-	
-	hdr = (void*)ptr-sizeof(allochdr_t);
-	blk = (void*)hdr;
-	blk->size = hdr->size + sizeof(allochdr_t);
-	blk->next = 0;
-	blk->prev = 0;
-	
-	// TODO: insert it back into the free list in order
-	// currently it just appends the free blocks
-	if(freelist == 0)
-	{
-		freelist = blk;
-		return;
-	}
-	
-	cur = freelist;
-	while(cur->next != 0)
-		cur = cur->next;
-	
-	cur->next = blk;
-	blk->prev = cur;
 }
