@@ -9,10 +9,7 @@
 #include <i386/boot.h>
 #include <i386/frame.h>
 #include <i386/paging.h>
-#include <i386/vmem_mgr.h>
 
-//extern void* kheap_start;
-//extern void* kheap_end;
 
 void mm_init(multiboot_info_t* mbt)
 {
@@ -23,10 +20,8 @@ void mm_init(multiboot_info_t* mbt)
 	// initialize the frame allocator
 	frame_init(mbt);
 	
-	// initialize the virtual memory manager
-	// this maps the kernel to its virtual home
-	vmem_mgr_init();
-	
+	// setup paging (we replace the bootstrapped setup)
+	paging_init();
 	
 	// setup the kernel heap
 	// TODO: these need to be virtual addresses, not physical...

@@ -21,5 +21,5 @@ void pit_init()
 	outb(PIT_CH0_DATA, PIT_CH0_RLDL);
 	outb(PIT_CH0_DATA, PIT_CH0_RLDH);
 
-	isr_register_isr(32, &tmr_isr);
+	register_isr(32, &tmr_isr);
 }

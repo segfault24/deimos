@@ -17,7 +17,8 @@ void isr_handler(regs_t regs)
 	{
 		(specific_handler[regs.int_no])(&regs);
 	} else {
-		printf("\ninterrupt# %x error# %x\n", regs.int_no, regs.err_code);
+		printf("\nINT:%x ERR:%x\n", regs.int_no, regs.err_code);
+		dump_regs(&regs);
 		kpanic("uncaught interrupt");
 	}
 
@@ -26,17 +27,23 @@ void isr_handler(regs_t regs)
 		pic_send_eoi(regs.int_no - 32);
 }
 
-inline void isr_enable_interrupts()
+void enable_interrupts(){__asm__ volatile ( "sti" );}
+void disable_interrupts(){__asm__ volatile ( "cli" );}
+
+void dump_regs(regs_t* regs)
 {
-	__asm__ volatile ( "sti" );
+	uint32_t cr0, cr2, cr3, cr4;
+	
+	__asm__ volatile ("movl %%cr0, %0;" :"=rm"(cr0) : );
+	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
+	__asm__ volatile ("movl %%cr3, %0;" :"=rm"(cr3) : );
+	__asm__ volatile ("movl %%cr4, %0;" :"=rm"(cr4) : );
+	printf("EAX:%x EBX:%x ECX:%x EDX:%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
+	printf("EDI:%x ESI:%x EBP:%x ESP:%x EIP:%x\n", regs->edi, regs->esi, regs->ebp, regs->esp, regs->eip);
+	printf("CR0:%x CR1:00000000 CR2:%x CR3:%x CR4:%x\n", cr0, cr2, cr3, cr4);
 }
 
-inline void isr_disable_interrupts()
-{
-	__asm__ volatile ( "cli" );
-}
-
-void isr_register_isr(uint8_t interrupt,  void (*func_ptr))
+void register_isr(uint8_t interrupt,  void (*func_ptr))
 {
 	specific_handler[interrupt] = func_ptr;
 	handler_exists[interrupt] = 1;
@@ -45,7 +52,7 @@ void isr_register_isr(uint8_t interrupt,  void (*func_ptr))
 		pic_unmask_irq(interrupt - 32);
 }
 
-void isr_clear_isr(uint8_t interrupt)
+void clear_isr(uint8_t interrupt)
 {
 	specific_handler[interrupt] = 0;
 	handler_exists[interrupt] = 0;
@@ -56,11 +63,9 @@ void isr_clear_isr(uint8_t interrupt)
 
 void isr_init()
 {
-	pic_init();
-
 	size_t i;
 	for(i=0; i<IDT_NUM_ENTRIES; i++)
-		isr_clear_isr(i);
+		clear_isr(i);
 
 	// we tell the IDT to tell us about *all* interrupts
 	// we check if we have a handler registered in our table
