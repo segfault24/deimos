@@ -1,3 +1,20 @@
+#
+#   Copyright (C) 2015  Austin Selick-Bottos
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 .global isr0w,  isr1w,  isr2w,  isr3w,  isr4w,  isr5w
 .global isr6w,  isr7w,  isr8w,          isr10w, isr11w
 .global isr12w, isr13w, isr14w,         isr16w, isr17w
