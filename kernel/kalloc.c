@@ -31,8 +31,9 @@ typedef struct _header_t {
 
 static header_t* kheap;
 
-// TODO: only up to the first 4KiB of memory returned
-// is guaranteed to be contiguoius in physical memory
+// only up to the first 4KiB of memory returned is
+// guaranteed to be contiguous in physical memory
+// and even then that's only if align is set
 static void* kmalloc_int(size_t size, int align, phys_addr* p)
 {
 	header_t* h;
@@ -47,40 +48,32 @@ static void* kmalloc_int(size_t size, int align, phys_addr* p)
 		// find a big enough free block
 		if((h->allocated == 0) && (h->size >= size + sizeof(header_t)))
 		{
-			if(h->size >= size + 2*sizeof(header_t))
+			if(h->size < size + 2*sizeof(header_t))
 			{
-				// just reduce the free block's size
-				h->size -= size + sizeof(header_t);
-				new_h = (void*)h + h->size;
-			}
-			else
-			{
-				return 0;
 				// there won't be enough space left for the free
 				// block header so we use the entire free block
-				//size = blk->size-sizeof(allochdr);
-				//if(blk->next != 0)
-				//	blk->next->prev = blk->prev;
-				//if(blk->prev != 0)
-				//	blk->prev->next = blk->next;
-				//hdr = (void*)blk;
-				//
-				// wipe the block
-				//blk->size = 0;
-				//blk->next = 0;
-				//blk->prev = 0;
+				h->allocated = 1;
+				return (void*)h + sizeof(header_t);
 			}
-			new_h->size = size + sizeof(header_t);
-			new_h->allocated = 1;
 			
-			// insert the block into the list
+			// otherwise we just use the free block and reduce
+			// its size to match the request, then add a free
+			// block after it for the remainder of the space
+			new_h = (void*)h + size + sizeof(header_t);
+			new_h->size = h->size - (size + sizeof(header_t));
+			new_h->allocated = 0;
+			
+			h->size = sizeof(header_t) + size;
+			h->allocated = 1;
+			
+			// insert the new free block into the list
 			if(h->next != 0)
 				h->next->prev = new_h;
 			new_h->next = h->next;
 			h->next = new_h;
 			new_h->prev = h;
 			
-			return (void*)new_h + sizeof(header_t);
+			return (void*)h + sizeof(header_t);
 		}
 		// iterate to the next free block
 		h = h->next;
