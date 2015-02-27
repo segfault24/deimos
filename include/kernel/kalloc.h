@@ -19,6 +19,7 @@
 #define KERNEL_KALLOC_H
 
 #include <stddef.h>
+#include <i386/paging.h>
 
 void kheap_init(void* start, size_t size);
 void kheap_print();
