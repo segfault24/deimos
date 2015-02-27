@@ -104,6 +104,8 @@ void paging_init();
 
 void switch_directory(page_directory_t* pd);
 
+phys_addr virt_to_phys(virt_addr v);
+
 void page_fault_handler(regs_t* regs);
 
 #endif
