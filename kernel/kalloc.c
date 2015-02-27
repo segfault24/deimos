@@ -31,15 +31,26 @@ typedef struct _header_t {
 
 static header_t* kheap;
 
+// TODO: this. it'll eliminate duplicate logic
+// splits the given block s bytes in
+// returns pointer to the new block
+// s = block size (not alloc size!)
+//static header_t* split_hdr(header_t* h, size_t s)
+//{
+//	return 0;
+//}
+
+// TODO: need to be able to expand the heap when it fills
+
 // only up to the first 4KiB of memory returned is
 // guaranteed to be contiguous in physical memory
 // and even then that's only if align is set
-static void* kmalloc_int(size_t size, int align, phys_addr* p)
+static void* kmalloc_int(size_t size, int align)
 {
 	header_t* h;
 	header_t* new_h;
 	
-	if(size == 0 || align != 0 || p != 0)
+	if(size == 0)
 		return 0;
 	
 	h = kheap;
@@ -48,32 +59,76 @@ static void* kmalloc_int(size_t size, int align, phys_addr* p)
 		// find a big enough free block
 		if((h->allocated == 0) && (h->size >= size + sizeof(header_t)))
 		{
-			if(h->size < size + 2*sizeof(header_t))
+			// TODO: can we consolidate the aligned and unaligned logic somehow?
+			if(align)
 			{
-				// there won't be enough space left for the free
-				// block header so we use the entire free block
-				h->allocated = 1;
+				// get the nearest page aligned address
+				uint32_t aligned_addr = (uint32_t)((void*)h + 2*sizeof(header_t) + 0x0FFF) & 0xFFFFF000;
+				
+				// if the space after the align isn't big enough, move on
+				if(aligned_addr + size > (uint32_t)h + h->size)
+					continue;
+				
+				// create the new block at the aligned address
+				new_h = (void*)aligned_addr - sizeof(header_t);
+				new_h->size = (uint32_t)h + h->size - aligned_addr;
+				new_h->allocated = 1;
+				// update the old block
+				h->size = aligned_addr - (uint32_t)h;
+				// insert the new block
+				if(h->next != 0)
+					h->next->prev = new_h;
+				new_h->next = h->next;
+				h->next = new_h;
+				new_h->prev = h;
+				
+				// chop off the excess?
+				if(new_h->size > size + sizeof(header_t))
+				{
+					header_t* back_h = new_h + size + sizeof(header_t);
+					back_h->size = new_h->size - (size + sizeof(header_t));
+					back_h->allocated = 0;
+					
+					new_h->size = size + sizeof(header_t);
+					
+					if(new_h->next != 0)
+						new_h->next->prev = back_h;
+					back_h->next = new_h->next;
+					new_h->next = back_h;
+					back_h->prev = new_h;
+				}
+				
+				return (void*)new_h + sizeof(header_t);
+			}
+			else
+			{
+				if(h->size < size + 2*sizeof(header_t))
+				{
+					// there won't be enough space left for the free
+					// block header so we use the entire free block
+					h->allocated = 1;
+				}
+				else
+				{
+					// otherwise we just use the free block and reduce
+					// its size to match the request, then add a free
+					// block after it for the remainder of the space
+					new_h = (void*)h + size + sizeof(header_t);
+					new_h->size = h->size - (size + sizeof(header_t));
+					new_h->allocated = 0;
+					
+					h->size = sizeof(header_t) + size;
+					h->allocated = 1;
+					
+					// insert the new free block into the list
+					if(h->next != 0)
+						h->next->prev = new_h;
+					new_h->next = h->next;
+					h->next = new_h;
+					new_h->prev = h;
+				}
 				return (void*)h + sizeof(header_t);
 			}
-			
-			// otherwise we just use the free block and reduce
-			// its size to match the request, then add a free
-			// block after it for the remainder of the space
-			new_h = (void*)h + size + sizeof(header_t);
-			new_h->size = h->size - (size + sizeof(header_t));
-			new_h->allocated = 0;
-			
-			h->size = sizeof(header_t) + size;
-			h->allocated = 1;
-			
-			// insert the new free block into the list
-			if(h->next != 0)
-				h->next->prev = new_h;
-			new_h->next = h->next;
-			h->next = new_h;
-			new_h->prev = h;
-			
-			return (void*)h + sizeof(header_t);
 		}
 		// iterate to the next free block
 		h = h->next;
@@ -97,7 +152,7 @@ void kheap_print()
 	header_t* h = kheap;
 	while(h)
 	{
-		printf(" %x %x %x %x %x\n", h, h->prev, h->next, h->allocated, h->size);
+		printf(" %x-%x-%x %x %x\n", h->prev, h, h->next, h->allocated, h->size);
 		h = h->next;
 	}
 	printf("\n");
@@ -131,17 +186,20 @@ void kfree(void* ptr)
 
 void* kmalloc(size_t size)
 {
-	return kmalloc_int(size, 0, 0);
+	return kmalloc_int(size, 0);
 }
 
 void* kmalloc_a(size_t size)
 {
-	return kmalloc_int(size, 1, 0);
+	return kmalloc_int(size, 1);
 }
 
 void* kmalloc_ap(size_t size, phys_addr* p)
 {
-	return kmalloc_int(size, 1, p);
+	void* addr = kmalloc_int(size, 1);
+	if(p)
+		*p = virt_to_phys((virt_addr)addr);
+	return addr;
 }
 
 void* kcalloc(size_t num, size_t size)
