@@ -19,5 +19,6 @@
 #define KERNEL_STDLIB_H
 
 char* itoa(int value, char* str, int base);
+int atoi(const char* str);
 
 #endif
