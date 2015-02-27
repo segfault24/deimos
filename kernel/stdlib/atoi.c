@@ -15,53 +15,34 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <kernel/ctype.h>
 #include <kernel/stdlib.h>
-#include <kernel/stdio.h>
 
-// TODO: incomplete
-// taken from GNU somewhere
-void printf(const char* format, ...)
+int atoi(const char* str)
 {
-	char **arg = (char**)&format;
-	int c;
-	char buf[20];
+	int i = 0;
+	int sign = 1;
 	
-	arg++;
-	
-	while((c = *format++) != 0)
+	while(*str && isspace(*str))
 	{
-		if (c != '%')
-		putchar(c);
-		else
-		{
-			char *p;
-			c = *format++;
-			switch(c)
-			{
-				case 'd':
-				case 'u':
-				case 'x':
-					itoa(*((int *) arg++), buf, c);
-					p = buf;
-					goto string;
-					break;
-				
-				case 's':
-					p = *arg++;
-					if (! p)
-						p = "(null)";
-					goto string;
-					break;
-				
-				string:
-					while (*p)
-						putchar(*p++);
-					break;
-				
-				default:
-					putchar(*((int *) arg++));
-					break;
-			}
-		}
+		str++;
 	}
+	
+	if(*str == '-')
+	{
+		sign = -1;
+		str++;
+	}
+	else if(*str == '+')
+	{
+		str++;
+	}
+	
+	while(*str && isdigit(*str))
+	{
+		i = i*10 + (*str - '0');
+		str++;
+	}
+	
+	return sign*i;
 }

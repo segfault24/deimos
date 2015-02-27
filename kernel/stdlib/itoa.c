@@ -18,6 +18,7 @@
 #include <kernel/stdlib.h>
 
 // TODO: incomplete
+// taken from GNU somewhere
 char* itoa(int value, char* str, int base)
 {
 	char *p = str;
