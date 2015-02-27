@@ -18,7 +18,7 @@
 #include <stdint.h>
 
 #include <kernel/multiboot.h>
-#include <kernel/stdio.h>
+#include <kernel/stdlib.h>
 #include <kernel/error.h>
 #include <kernel/kalloc.h>
 #include <kernel/mm.h>
@@ -33,7 +33,7 @@ extern void* KERNEL_END;
 void mm_init(multiboot_info_t* mbt)
 {
 	// check if the memory map is present
-	if(!(mbt->flags & 0x20))
+	if(!(mbt->flags & MULTIBOOT_INFO_MEM_MAP))
 		kpanic("no memory map available in multiboot info structure");
 	
 	// initialize the frame allocator
@@ -44,21 +44,4 @@ void mm_init(multiboot_info_t* mbt)
 	
 	// setup the kernel heap
 	kheap_init(&KERNEL_END, KERNEL_VMA+KERNEL_PMA+KERNEL_SIZE-(int)&KERNEL_END);
-	
-	// TESTING BELOW, DELETE WHEN DONE
-	//kheap_print();
-	//while(1)
-	//{
-	//	printf("alloc:%x\n", kmalloc(1));
-	//	kheap_print();
-	//	getchar();
-	//}
-	//void* test1 = kmalloc(10);
-	//printf("alloc:%x\n", test1);kheap_print();
-	//void* test2 = kmalloc(10);
-	//printf("alloc:%x\n", test2);kheap_print();
-	//kfree(test2);
-	//printf("free:%x\n", test2);kheap_print();
-	//kfree(test1);
-	//printf("free:%x\n", test1);kheap_print();
 }
