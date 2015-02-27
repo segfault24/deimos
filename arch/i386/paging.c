@@ -96,6 +96,26 @@ void switch_directory(page_directory_t* pd)
 	__asm__ volatile ( "movl %0, %%cr3" : :"rm"(pd->phys) );
 }
 
+phys_addr virt_to_phys(virt_addr v)
+{
+	// grab the directory entry
+	pd_entry* pde = pd_lookup(current_pd, v);
+	// make sure it's valid
+	if(!pde_get_attrib(pde, PDE_PRESENT))
+		return 0;
+	// support 4MiB pages
+	if(pde_get_attrib(pde, PDE_4MB))
+		return pde_get_frame(pde) | (v & 0x003FFFFF);
+	
+	// grab the page table entry
+	pt_entry* pte = pt_lookup(current_pd->tables[v>>22 & 0x3FF], v);
+	// make sure it's valid
+	if(!pte_get_attrib(pte, PTE_PRESENT))
+		return 0;
+	// return the address
+	return pte_get_frame(pte) | (v & ~PTE_FRAME);
+}
+
 void page_fault_handler(regs_t* regs)
 {
 	uint32_t cr2;
