@@ -25,6 +25,8 @@
 #include <kernel/tty.h>
 #include <kernel/arch.h>
 #include <kernel/mm.h>
+#include <kernel/process.h>
+#include <kernel/sched.h>
 
 // assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
@@ -40,7 +42,17 @@ void kmain(multiboot_info_t* mbt)
 	tty_init(); // terminal
 	arch_init(); // architecture unique stuff
 	mm_init(mbt); // memory management setup
+	sched_init(); // scheduling setup
 
-	for(;;)
-		putchar(getchar());
+	int ret = kfork();
+	if(ret == 1)
+	{
+		printf("parent\n");
+		while(1);
+	}
+	else
+	{
+		printf("child\n");
+		while(1);
+	}
 }
