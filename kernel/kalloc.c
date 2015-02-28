@@ -19,6 +19,7 @@
 #include <stdint.h>
 
 #include <kernel/stdio.h>
+#include <kernel/error.h>
 #include <kernel/string.h>
 #include <kernel/kalloc.h>
 
@@ -52,6 +53,9 @@ static void* kmalloc_int(size_t size, int align)
 	
 	if(size == 0)
 		return 0;
+	
+	if(!kheap)
+		kpanic("kmalloc: tried to allocate memory before heap initialization");
 	
 	h = kheap;
 	while(h != 0)

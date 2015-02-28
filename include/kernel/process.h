@@ -18,22 +18,26 @@
 #ifndef KERNEL_PROCESS_H
 #define KERNEL_PROCESS_H
 
+#include <i386/isr.h>
+#include <i386/paging.h>
+
 #define PROCESS_RUNNING  0
 #define PROCESS_SLEEPING 1
 #define PROCESS_STOPPED  2
 
-#include <i386/isr.h>
+#define PROCESS_STACK_SIZE 0x4000
 
 typedef struct _process_t {
 	int pid;
+	int parent_pid;
 	int state;
-
 	int cpu_time;
-	struct _process_t* next_proc;
 	
-	// machine state
-	regs_t regs;
-	// TODO: address space things
+	regs_t* regs;
+	page_directory_t* page_dir;
+	void* stack;
+	
+	struct _process_t* next_proc;
 } process_t;
 
 #endif

@@ -19,6 +19,7 @@
 #include <kernel/string.h>
 #include <kernel/stdio.h>
 #include <kernel/error.h>
+#include <kernel/kalloc.h>
 #include <i386/boot.h>
 #include <i386/isr.h>
 #include <i386/paging.h>
@@ -123,5 +124,37 @@ void page_fault_handler(regs_t* regs)
 	// get the faulty address from CR2
 	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
 	printf("page fault at: %x with error code: %x\n", cr2, regs->err_code);
+	dump_regs(regs);
 	kpanic("page fault");
+}
+
+page_directory_t* get_kernel_pd()
+{
+	return kernel_pd;
+}
+
+page_directory_t* get_current_pd()
+{
+	return current_pd;
+}
+
+// TODO: this
+page_directory_t* clone_pd(page_directory_t* pd)
+{
+	page_directory_t* new_pd;
+	phys_addr paddr;
+	
+	new_pd = kmalloc_ap(sizeof(page_directory_t), &paddr);
+	if(!new_pd)
+		return 0;
+	new_pd->phys = paddr;
+	
+	// loop through each entry and corresponding table
+	//for(0, 1024, 1)
+	//{
+	//	new_pd->entries = ;
+	//	new_pd->tables = ;
+	//}
+	
+	return pd;
 }
