@@ -86,7 +86,8 @@ void sched_init()
 void do_scheduling(unsigned int ticks)
 {
 	ticks++;//dummy
-	switch_task();
+	if(0)
+		switch_task();
 }
 
 int kfork()
