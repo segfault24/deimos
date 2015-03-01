@@ -123,7 +123,7 @@ void page_fault_handler(regs_t* regs)
 	
 	// get the faulty address from CR2
 	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
-	printf("page fault at: %x with error code: %x\n", cr2, regs->err_code);
+	printf("\npage fault at: %x with error code: %x\n", cr2, regs->err_code);
 	dump_regs(regs);
 	kpanic("page fault");
 }

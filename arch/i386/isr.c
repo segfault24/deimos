@@ -57,7 +57,7 @@ void dump_regs(regs_t* regs)
 	__asm__ volatile ("movl %%cr4, %0;" :"=rm"(cr4) : );
 	printf("EAX:%x EBX:%x ECX:%x EDX:%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
 	printf("EDI:%x ESI:%x EBP:%x ESP:%x\n", regs->edi, regs->esi, regs->ebp, regs->esp);
-	printf("CS:%x SS:%x EFLAGS:%x EIP:%x\n", regs->cs, regs->ss, regs->eflags, regs->eip);
+	printf("CS:%x EFLAGS:%x EIP:%x\n", regs->cs, regs->eflags, regs->eip);
 	printf("CR0:%x CR1:00000000 CR2:%x CR3:%x CR4:%x\n\n", cr0, cr2, cr3, cr4);
 }
 
