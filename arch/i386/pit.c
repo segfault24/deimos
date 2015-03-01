@@ -24,10 +24,10 @@
 
 static unsigned int ticks = 0;
 
-static void tmr_isr(regs_t* regs)
+static void tmr_isr()
 {
 	ticks++;
-	do_scheduling(ticks, regs);
+	do_scheduling(ticks);
 }
 
 void pit_init()

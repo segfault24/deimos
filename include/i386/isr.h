@@ -23,7 +23,7 @@
 typedef struct _regs_t {
     unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax; // from pushal
     unsigned int int_no, err_code; // from our isr wrappers
-    unsigned int eip, cs, eflags, useresp, ss; // cpu automatically pushes these
+    unsigned int eip, cs, eflags; // cpu automatically pushes these
 } regs_t;
 
 // wrapper stubs that call our generic interrupt handler

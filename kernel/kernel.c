@@ -43,16 +43,20 @@ void kmain(multiboot_info_t* mbt)
 	arch_init(); // architecture unique stuff
 	mm_init(mbt); // memory management setup
 	sched_init(); // scheduling setup
-
+	
+	printf("kfork()\n");
 	int ret = kfork();
+	printf(" > child pid = %x\n", ret);
 	if(ret == 1)
 	{
-		printf("parent\n");
-		while(1);
+		printf("parent process\n");
+		while(1)
+			;//putchar('.');
 	}
 	else
 	{
-		printf("child\n");
-		while(1);
+		printf("child process\n");
+		while(1)
+			;//putchar('_');
 	}
 }

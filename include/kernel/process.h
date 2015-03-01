@@ -33,11 +33,14 @@ typedef struct _process_t {
 	int state;
 	int cpu_time;
 	
-	regs_t* regs;
 	page_directory_t* page_dir;
 	void* stack;
+	unsigned int eip, esp, ebp;
 	
 	struct _process_t* next_proc;
 } process_t;
+
+process_t* new_process();
+process_t* clone_process(process_t* parent);
 
 #endif

@@ -23,7 +23,7 @@
 
 void sched_init();
 
-void do_scheduling(unsigned int ticks, regs_t* regs);
+void do_scheduling(unsigned int ticks);
 
 int kfork();
 
