@@ -46,7 +46,7 @@ process_t* clone_process(process_t* parent)
 		return 0;
 	
 	child->parent_pid = parent->pid;
-	child->state = PRCOESS_RUNNING;
+	child->state = PROCESS_RUNNING;
 	
 	// setup a page directory
 	child->page_dir = get_current_pd();

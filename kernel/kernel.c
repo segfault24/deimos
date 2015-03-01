@@ -44,19 +44,6 @@ void kmain(multiboot_info_t* mbt)
 	mm_init(mbt); // memory management setup
 	sched_init(); // scheduling setup
 	
-	printf("kfork()\n");
-	int ret = kfork();
-	printf(" > child pid = %x\n", ret);
-	if(ret == 1)
-	{
-		printf("parent process\n");
-		while(1)
-			;//putchar('.');
-	}
-	else
-	{
-		printf("child process\n");
-		while(1)
-			;//putchar('_');
-	}
+	while(1)
+		putchar(getchar());
 }
