@@ -28,6 +28,7 @@
 #include <kernel/process.h>
 #include <kernel/sched.h>
 #include <kernel/pci.h>
+#include <kernel/net.h>
 
 // assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
@@ -46,6 +47,7 @@ void kmain(multiboot_info_t* mbt)
 	sched_init(); // scheduling setup
 	
 	pci_init(); // scan the pci bus
+	net_init(); // sets up the networking stack
 	
 	while(1)
 		putchar(getchar());

@@ -4,7 +4,6 @@ ARCH=i386
 ARCHDIR=arch/$(ARCH)
 
 # compiler and linker locations & options
-AR=/home/austin/opt/cross/bin/i686-elf-ar
 CC=/home/austin/opt/cross/bin/i686-elf-gcc
 CFLAGS=-g -ffreestanding -fno-builtin -Wall -Werror -Wextra -Iinclude
 LDFLAGS=-nostdlib -lgcc
@@ -13,15 +12,15 @@ LDFLAGS=-nostdlib -lgcc
 include $(ARCHDIR)/make.config
 #KERNELOBJS
 include kernel/make.config
-#OSOBJS
-OSOBJS=$(ARCHOBJS) $(KERNELOBJS)
+#DRIVERS
+include drivers/make.config
 
 # dummy default target (see below)
 _all: all
 
 # compile kernel
-deimos.bin: $(OSOBJS) $(ARCHDIR)/kernel.ld
-	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(OSOBJS) $(CFLAGS) $(LDFLAGS)
+deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(ARCHDIR)/kernel.ld
+	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(ARCHOBJS) $(KERNELOBJS) $(CFLAGS) $(LDFLAGS)
 
 # generic compile rules
 %.o: %.c
@@ -41,9 +40,10 @@ deimos.iso: deimos.bin
 	rm -rf isodir
 
 # actual targets
-all: kernel iso
+all: kernel iso drivers
 kernel: deimos.bin
 iso: deimos.iso
+drivers: $(DRIVEROBJS)
 
 run: iso
 	qemu -cdrom deimos.iso -monitor stdio -net nic,model=rtl8139

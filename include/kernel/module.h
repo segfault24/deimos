@@ -15,5 +15,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef KERNEL_MODULE_H
+#define KERNEL_MODULE_H
+
 int load_module(char* modname);
 int unload_module(char* modname);
+
+#endif

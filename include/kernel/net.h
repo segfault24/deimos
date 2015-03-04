@@ -31,7 +31,6 @@ typedef struct _pkt_buf_t {
 } pkt_buf_t;
 
 void net_init();
-void net_loop();
 
 int net_register_dev(net_dev_t* dev);
 int net_remove_dev(net_dev_t* dev);
