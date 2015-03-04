@@ -31,10 +31,10 @@ void arch_init()
 	idt_init(); // setup the interrupt descriptor table
 	pic_init(); // must do this before isr_init()
 	isr_init(); // setup the various components of the interrupt system
-
+	
 	pit_init(); // setup the interrupt timer for a sysclock
 	ps2_init(); // setup the ps/2 controller(s)
 	kbd_init(); // setup the ps/2 keyboard
-
+	
 	enable_interrupts(); // now we're ready
 }
