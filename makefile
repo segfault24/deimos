@@ -46,7 +46,7 @@ kernel: deimos.bin
 iso: deimos.iso
 
 run: iso
-	qemu -cdrom deimos.iso -monitor stdio
+	qemu -cdrom deimos.iso -monitor stdio -net nic,model=rtl8139
 
 clean:
 	rm -f *.o */*.o */*/*.o deimos.bin deimos.iso
