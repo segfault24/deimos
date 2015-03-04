@@ -15,10 +15,24 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <kernel/kalloc.h>
+#include <kernel/stdio.h>
+#include <kernel/pci.h>
+#include <kernel/net.h>
+
+static pci_dev_t* rtl_pci_dev;
+//static net_dev_t* rtl_net_dev;
+
 int module_init()
 {
+	rtl_pci_dev = pci_search(0x10EC, 0x8139);
+	if(!rtl_pci_dev)
+		return 0;
+	printf("found RTL8139 device\n");
+	return 0;
 }
 
 int module_kill()
 {
+	return 0;
 }

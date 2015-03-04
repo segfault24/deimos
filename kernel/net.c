@@ -19,12 +19,13 @@
 
 static net_dev_t* net_dev_list = 0;
 
-void net_init()
+static void net_loop()
 {
 }
 
-void net_loop()
+void net_init()
 {
+	net_loop();
 }
 
 int net_register_dev(net_dev_t* dev)
