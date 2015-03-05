@@ -32,8 +32,9 @@ typedef struct _pkt_buf_t {
 
 void net_init();
 
-int net_register_dev(net_dev_t* dev);
-int net_remove_dev(net_dev_t* dev);
+// return non-zero on failure
+int register_net_dev(net_dev_t* dev);
+int remove_net_dev(net_dev_t* dev);
 
 pkt_buf_t* net_alloc_pkt_buf(size_t size);
 void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt);

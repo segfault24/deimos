@@ -30,6 +30,8 @@
 #include <kernel/pci.h>
 #include <kernel/net.h>
 
+#include <kernel/dsh.h>
+
 // assumptions from multiboot spec:
 //   - EBX contains the address of the multiboot info structure
 //   - A20 is gate enabled
@@ -49,6 +51,5 @@ void kmain(multiboot_info_t* mbt)
 	pci_init(); // scan the pci bus
 	net_init(); // sets up the networking stack
 	
-	while(1)
-		putchar(getchar());
+	dsh_loop();
 }
