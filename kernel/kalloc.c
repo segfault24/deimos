@@ -156,7 +156,7 @@ void kheap_print()
 	header_t* h = kheap;
 	while(h)
 	{
-		printf(" %x-%x-%x %x %x\n", h->prev, h, h->next, h->allocated, h->size);
+		printf("%x-%x-%x %x %x\n", h->prev, h, h->next, h->allocated, h->size);
 		h = h->next;
 	}
 	printf("\n");

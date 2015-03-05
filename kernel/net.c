@@ -52,7 +52,7 @@ int remove_net_dev(net_dev_t* dev)
 	{
 		net_dev_list = dev->next;
 		dev->next = 0;
-		return 1;
+		return 0;
 	}
 	
 	n = net_dev_list;
@@ -62,11 +62,11 @@ int remove_net_dev(net_dev_t* dev)
 		{
 			n->next = n->next->next;
 			dev->next = 0;
-			return 1;
+			return 0;
 		}
 		n = n->next;
 	}
-	return 0;
+	return 1;
 }
 
 pkt_buf_t* net_alloc_pkt_buf(size_t size)

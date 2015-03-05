@@ -93,7 +93,8 @@ int module_init()
 	outb(iobase + CR, 0x0C);
 	
 	// iterrupt setup
-	register_isr(rtl_pci_dev->intline, &rtl_isr_handler); // register our interrupt handler
+	if(request_irq(rtl_pci_dev->intline, (unsigned int)&rtl_pci_dev, &rtl_isr_handler))
+		kpanic("rtl8139: could not register irq");
 	outw(iobase + IMR, 0x0005); // enables TOK and ROK irqs on RTL
 	
 	return 0;
@@ -103,7 +104,7 @@ int module_kill()
 {
 	// clear the isr handle and the device's interrupts
 	outw(iobase + IMR, 0x0000);
-	clear_isr(rtl_pci_dev->intline);
+	release_irq(rtl_pci_dev->intline, (unsigned int)&rtl_pci_dev);
 	
 	// disable rx and tx
 	outb(iobase + CR, 0x00);

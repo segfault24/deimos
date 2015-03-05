@@ -19,72 +19,171 @@
 #include <stdint.h>
 
 #include <kernel/stdio.h>
+#include <kernel/string.h>
 #include <kernel/error.h>
+#include <kernel/kalloc.h>
 #include <i386/idt.h>
 #include <i386/pic.h>
 #include <i386/isr.h>
 
-static uint8_t handler_exists[IDT_NUM_ENTRIES];
-static void (*specific_handler[IDT_NUM_ENTRIES]) (regs_t* regs);
+// wrapper stubs that call our generic interrupt handler
+extern void isr0w();  // divide by zero
+extern void isr1w();  // debug
+extern void isr2w();  // non maskable interrupt
+extern void isr3w();  // breakpoint
+extern void isr4w();  // overflow
+extern void isr5w();  // bound range exceeded
+extern void isr6w();  // invalid opcode
+extern void isr7w();  // device not available
+extern void isr8w();  // double fault
+extern void isr10w(); // invalid TSS
+extern void isr11w(); // segment not present
+extern void isr12w(); // stack segment fault
+extern void isr13w(); // general protection fault
+extern void isr14w(); // page fault
+extern void isr16w(); // x87 floating point exception
+extern void isr17w(); // alignment check
+extern void isr18w(); // machine check
+extern void isr19w(); // SIMD floating point exception
+extern void isr20w(); // virtualization exception
+extern void isr30w(); // security exception
+// 32-47 are technically mapped IRQs
+extern void irq0w();  // programmable interrupt timer
+extern void irq1w();  // keyboard
+// irq2 is for PIC chaining
+extern void irq3w();  // COM2
+extern void irq4w();  // COM1
+extern void irq5w();  // LPT2
+extern void irq6w();  // floppy disk
+extern void irq7w();  // LPT1/spurious
+extern void irq8w();  // CMOS real time clock
+extern void irq9w();  // (free)
+extern void irq10w(); // (free)
+extern void irq11w(); // (free)
+extern void irq12w(); // PS/2 mouse
+extern void irq13w(); // FPU/coprocessor/inter-processor
+extern void irq14w(); // primary ATA hard disk
+extern void irq15w(); // secondary ATA hard disk
 
+typedef struct _handler_ptr_t {
+	unsigned int id;
+	void (*handler)(regs_t* regs);
+	struct _handler_ptr_t* next;
+} handler_ptr_t;
+
+// Instead of a table of struct pointers, I made it a table of the struct itself
+// so we can register our initial isr/irqs before the heap gets initialized.
+// Trying to register more than one handler to an interrupt/irq number before the
+// heap is initialized will fail.
+static handler_ptr_t handlers[256];
+
+// generic interrupt handler for use only by the asm wrappers
 void isr_handler(regs_t regs)
 {
-	// if there is a handler registered with us, call it
-	if(handler_exists[regs.int_no])
+	int i = 0;
+	handler_ptr_t* h = &handlers[regs.int_no];
+	while(h && h->handler)
 	{
-		(specific_handler[regs.int_no])(&regs);
-	} else {
-		printf("\nINT:%x ERR:%x\n", regs.int_no, regs.err_code);
+		(h->handler)(&regs);
+		h = h->next;
+		i = 1;
+	}
+	if(!i)
+	{
 		dump_regs(&regs);
 		kpanic("uncaught interrupt");
 	}
-
+	
 	// if the interrupt was an IRQ, tell the PIC we're done
 	if(regs.int_no > 31 && regs.int_no < 48)
 		pic_send_eoi(regs.int_no - 32);
 }
 
-void enable_interrupts(){__asm__ volatile ( "sti" );}
-void disable_interrupts(){__asm__ volatile ( "cli" );}
-
-void dump_regs(regs_t* regs)
+// TODO: request flags, like exclusive or shared 
+int request_isr(unsigned int interrupt, unsigned int id, void(*handler))
 {
-	uint32_t cr0, cr2, cr3, cr4;
+	if(interrupt > 256)
+		return 1;
 	
-	__asm__ volatile ("movl %%cr0, %0;" :"=rm"(cr0) : );
-	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
-	__asm__ volatile ("movl %%cr3, %0;" :"=rm"(cr3) : );
-	__asm__ volatile ("movl %%cr4, %0;" :"=rm"(cr4) : );
-	printf("EAX:%x EBX:%x ECX:%x EDX:%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
-	printf("EDI:%x ESI:%x EBP:%x ESP:%x\n", regs->edi, regs->esi, regs->ebp, regs->esp);
-	printf("CS:%x EFLAGS:%x EIP:%x\n", regs->cs, regs->eflags, regs->eip);
-	printf("CR0:%x CR1:00000000 CR2:%x CR3:%x CR4:%x\n\n", cr0, cr2, cr3, cr4);
+	if(handlers[interrupt].handler == 0)
+	{
+		// no one else has attached to this interrupt yet
+		handlers[interrupt].id = id;
+		handlers[interrupt].handler = handler;
+		return 0;
+	}
+	else
+	{
+		// add it to the chain
+		handler_ptr_t* n = kmalloc(sizeof(handler_ptr_t));
+		if(!n)
+			return 1;
+		n->id = id;
+		n->handler = handler;
+		n->next = 0;
+		
+		handler_ptr_t* h = &handlers[interrupt];
+		while(h->next)
+			h = h->next;
+		h->next = n;
+		return 0;
+	}
 }
 
-void register_isr(uint8_t interrupt,  void (*func_ptr))
+int request_irq(unsigned int irq, unsigned int id, void(*handler))
 {
-	specific_handler[interrupt] = func_ptr;
-	handler_exists[interrupt] = 1;
-	// if the interrupt is an IRQ, tell the PIC to unmask the line
-	if(interrupt > 31 && interrupt < 48)
-		pic_unmask_irq(interrupt - 32);
+	pic_unmask_irq(irq);
+	return request_isr(irq + 32, id, handler);
 }
 
-void clear_isr(uint8_t interrupt)
+void release_isr(unsigned int interrupt, unsigned int id)
 {
-	specific_handler[interrupt] = 0;
-	handler_exists[interrupt] = 0;
-	// if the interrupt is an IRQ, tell the PIC to mask the line
-	if(interrupt > 31 && interrupt < 48)
-		pic_mask_irq(interrupt - 32);
+	handler_ptr_t* h = &handlers[interrupt];
+	if(h->id == id)
+	{
+		if(h->next)
+		{
+			// move the next one into the table
+			h->id = h->next->id;
+			h->handler = h->next->handler;
+			handler_ptr_t* t = h->next;
+			h->next = h->next->next;
+			kfree(t);
+		}
+		else
+		{
+			// clear the table entry
+			memset(h, 0, sizeof(handler_ptr_t));
+		}
+	}
+	else
+	{
+		while(h->next)
+		{
+			if(h->next->id == id)
+			{
+				handler_ptr_t* t = h->next;
+				h->next = h->next->next;
+				kfree(t);
+				return;
+			}
+			h = h->next;
+		}
+	}
 }
+
+void release_irq(unsigned int irq, unsigned int id)
+{
+	release_isr(irq + 32, id);
+}
+
+void enable_interrupts(){__asm__ volatile ( "sti;nop;" );}
+void disable_interrupts(){__asm__ volatile ( "cli;nop;" );}
 
 void isr_init()
 {
-	size_t i;
-	for(i=0; i<IDT_NUM_ENTRIES; i++)
-		clear_isr(i);
-
+	memset(&handlers, 0, 256*sizeof(handler_ptr_t));
+	
 	// we tell the IDT to tell us about *all* interrupts
 	// we check if we have a handler registered in our table
 	// this is because we dont want to hard code ISR addresses
@@ -109,22 +208,51 @@ void isr_init()
 	idt_register_isr(19, &isr19w);
 	idt_register_isr(20, &isr20w);
 	idt_register_isr(30, &isr30w);
-
+	
 	// now the IRQs
-	idt_register_isr(32, &isr32w);
-	idt_register_isr(33, &isr33w);
-	//idt_register_isr(34, &isr34w);
-	//idt_register_isr(35, &isr35w);
-	//idt_register_isr(36, &isr36w);
-	//idt_register_isr(37, &isr37w);
-	//idt_register_isr(38, &isr38w);
-	//idt_register_isr(39, &isr39w);
-	//idt_register_isr(40, &isr40w);
-	//idt_register_isr(41, &isr41w);
-	//idt_register_isr(42, &isr42w);
-	//idt_register_isr(43, &isr43w);
-	//idt_register_isr(44, &isr44w);
-	//idt_register_isr(45, &isr45w);
-	//idt_register_isr(46, &isr46w);
-	//idt_register_isr(47, &isr47w);
+	idt_register_isr(32, &irq0w);
+	idt_register_isr(33, &irq1w);
+	// irq2 (int34) is for PIC chaining
+	idt_register_isr(35, &irq3w);
+	idt_register_isr(36, &irq4w);
+	idt_register_isr(37, &irq5w);
+	idt_register_isr(38, &irq6w);
+	idt_register_isr(39, &irq7w);
+	idt_register_isr(40, &irq8w);
+	idt_register_isr(41, &irq9w);
+	idt_register_isr(42, &irq10w);
+	idt_register_isr(43, &irq11w);
+	idt_register_isr(44, &irq12w);
+	idt_register_isr(45, &irq13w);
+	idt_register_isr(46, &irq14w);
+	idt_register_isr(47, &irq15w);
+}
+
+void dump_interrupts()
+{
+	size_t i;
+	for(i=0; i<256; i++)
+	{
+		handler_ptr_t* h = &handlers[i];
+		while(h && h->handler)
+		{
+			printf("int:%x\tid:%x\thandler:%x\n", i, h->id, h->handler);
+			h = h->next;
+		}
+	}
+}
+
+void dump_regs(regs_t* regs)
+{
+	uint32_t cr0, cr2, cr3, cr4;
+	
+	__asm__ volatile ("movl %%cr0, %0;" :"=rm"(cr0) : );
+	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
+	__asm__ volatile ("movl %%cr3, %0;" :"=rm"(cr3) : );
+	__asm__ volatile ("movl %%cr4, %0;" :"=rm"(cr4) : );
+	printf("INT:%x ERR:%x\n", regs->int_no, regs->err_code);
+	printf("EAX:%x EBX:%x ECX:%x EDX:%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
+	printf("EDI:%x ESI:%x EBP:%x ESP:%x\n", regs->edi, regs->esi, regs->ebp, regs->esp);
+	printf("CS:%x EFLAGS:%x EIP:%x\n", regs->cs, regs->eflags, regs->eip);
+	printf("CR0:%x CR1:00000000 CR2:%x CR3:%x CR4:%x\n\n", cr0, cr2, cr3, cr4);
 }
