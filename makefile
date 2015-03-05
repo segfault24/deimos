@@ -19,8 +19,8 @@ include drivers/make.config
 _all: all
 
 # compile kernel
-deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(ARCHDIR)/kernel.ld
-	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(ARCHOBJS) $(KERNELOBJS) $(CFLAGS) $(LDFLAGS)
+deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(ARCHDIR)/kernel.ld
+	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(CFLAGS) $(LDFLAGS)
 
 # generic compile rules
 %.o: %.c

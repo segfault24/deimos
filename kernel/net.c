@@ -19,16 +19,11 @@
 
 static net_dev_t* net_dev_list = 0;
 
-static void net_loop()
-{
-}
-
 void net_init()
 {
-	net_loop();
 }
 
-int net_register_dev(net_dev_t* dev)
+int register_net_dev(net_dev_t* dev)
 {
 	net_dev_t* n;
 	
@@ -36,17 +31,17 @@ int net_register_dev(net_dev_t* dev)
 	if(!net_dev_list)
 	{
 		net_dev_list = dev;
-		return 1;
+		return 0;
 	}
 	
 	n = net_dev_list;
 	while(n->next)
 		n = n->next;
 	n->next = dev;
-	return 1;
+	return 0;
 }
 
-int net_remove_dev(net_dev_t* dev)
+int remove_net_dev(net_dev_t* dev)
 {
 	net_dev_t* n;
 	
