@@ -19,9 +19,10 @@
 .global isr6w,  isr7w,  isr8w,          isr10w, isr11w
 .global isr12w, isr13w, isr14w,         isr16w, isr17w
 .global isr18w, isr19w, isr20w,                 isr30w
-.global isr32w, isr33w, isr34w, isr35w, isr36w, isr37w
-.global isr38w, isr39w, isr40w, isr41w, isr42w, isr43w
-.global isr44w, isr45w, isr46w, isr47w
+
+.global irq0w,  irq1w,          irq3w,  irq4w,  irq5w
+.global irq6w,  irq7w,  irq8w,  irq9w,  irq10w, irq11w
+.global irq12w, irq13w, irq14w, irq15w
 
 .align 4
 .extern isr_handler
@@ -136,16 +137,79 @@ isr30w: # security exception
 
 
 
-
-
 # hardware interrupt requests
-
-isr32w: # programmable interrupt timer
+irq0w:
 	pushl $0 # dummy
 	pushl $32
 	jmp common
 
-isr33w: # keyboard interrupt
+irq1w:
 	pushl $0 # dummy
 	pushl $33
 	jmp common
+
+irq3w:
+	pushl $0 # dummy
+	pushl $35
+	jmp common
+	
+irq4w:
+	pushl $0 # dummy
+	pushl $36
+	jmp common
+	
+irq5w:
+	pushl $0 # dummy
+	pushl $37
+	jmp common
+	
+irq6w:
+	pushl $0 # dummy
+	pushl $38
+	jmp common
+	
+irq7w:
+	pushl $0 # dummy
+	pushl $39
+	jmp common
+	
+irq8w:
+	pushl $0 # dummy
+	pushl $40
+	jmp common
+	
+irq9w:
+	pushl $0 # dummy
+	pushl $41
+	jmp common
+	
+irq10w:
+	pushl $0 # dummy
+	pushl $42
+	jmp common
+	
+irq11w:
+	pushl $0 # dummy
+	pushl $43
+	jmp common
+	
+irq12w:
+	pushl $0 # dummy
+	pushl $44
+	jmp common
+	
+irq13w:
+	pushl $0 # dummy
+	pushl $45
+	jmp common
+	
+irq14w:
+	pushl $0 # dummy
+	pushl $46
+	jmp common
+	
+irq15w:
+	pushl $0 # dummy
+	pushl $47
+	jmp common
+	
