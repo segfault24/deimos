@@ -15,6 +15,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <kernel/string.h>
 #include <kernel/stdio.h>
 #include <i386/ioasm.h>
 #include <kernel/kalloc.h>
@@ -22,30 +23,20 @@
 
 static pci_dev_t* pci_dev_list = 0;
 
-uint32_t pci_config_read_long(uint8_t bus, uint8_t dev, uint8_t func, uint8_t offset)
+// helper function to format a pci configuration space access address
+static uint32_t calc_pci_addr(pci_dev_t* pdev, uint8_t offset)
 {
-	uint32_t address =
+	return
 		((uint32_t)0x80000000) |
-		(((uint32_t)bus)<<16 & 0x00FF0000) |
-		(((uint32_t)dev)<<11 & 0x0000F800) |
-		(((uint32_t)func)<<8 & 0x00000700) |
+		(((uint32_t)pdev->bus)<<16 & 0x00FF0000) |
+		(((uint32_t)pdev->dev)<<11 & 0x0000F800) |
+		(((uint32_t)pdev->func)<<8 & 0x00000700) |
 		(((uint32_t)offset) &  0x000000FC);
-	outl(PCI_CONFIG_ADDRESS, address);
-	return inl(PCI_CONFIG_DATA);
 }
 
-uint16_t pci_config_read_word(uint8_t bus, uint8_t dev, uint8_t func, uint8_t offset)
-{
-	uint32_t l = pci_config_read_long(bus, dev, func, offset);
-	return (uint16_t)((l >> ((offset & 2) * 8)) & 0xFFFF);
-}
-
-uint8_t pci_config_read_byte(uint8_t bus, uint8_t dev, uint8_t func, uint8_t offset)
-{
-	uint32_t l = pci_config_read_long(bus, dev, func, offset);
-	return (uint8_t)((l >> ((offset & 3) * 8)) & 0xFF);
-}
-
+// helper function for the main enumeration loop that creates
+// a pci_dev_t for the given bus/dev/func (assumed valid)
+// and adds it to the list
 static void add_pci_dev(uint8_t bus, uint8_t dev, uint8_t func)
 {
 	pci_dev_t* p;
@@ -54,14 +45,22 @@ static void add_pci_dev(uint8_t bus, uint8_t dev, uint8_t func)
 	p = kmalloc(sizeof(pci_dev_t));
 	if(!p)
 		return;
+	memset(p, 0, sizeof(pci_dev_t));
+	
 	p->next = 0;
 	p->bus = bus;
 	p->dev = dev;
 	p->func = func;
-	p->vendorid = pci_config_read_word(bus, dev, func, PCI_CONFIG_W_VENDORID);
-	p->deviceid = pci_config_read_word(bus, dev, func, PCI_CONFIG_W_DEVICEID);
-	p->class = pci_config_read_byte(bus, dev, func, PCI_CONFIG_B_CLASSID);
-	p->subclass = pci_config_read_byte(bus, dev, func, PCI_CONFIG_B_SUBCLASSID);
+	p->vendorid = pci_readw(p, CFG_W_VENDORID);
+	p->deviceid = pci_readw(p, CFG_W_DEVICEID);
+	p->class = pci_readb(p, CFG_B_CLASSID);
+	p->subclass = pci_readb(p, CFG_B_SUBCLASSID);
+	p->headertype = pci_readb(p, CFG_B_HEADERTYPE);
+	
+	if(p->headertype == 0x00)
+	{
+		p->intline = pci_readb(p, CFG0_B_INTLINE);
+	}
 	
 	if(!pci_dev_list)
 	{
@@ -75,30 +74,79 @@ static void add_pci_dev(uint8_t bus, uint8_t dev, uint8_t func)
 	t->next = p;
 }
 
+uint32_t pci_readl(pci_dev_t* pdev, uint8_t offset)
+{
+	outl(CFG_ADDRESS, calc_pci_addr(pdev, offset));
+	return inl(CFG_DATA);
+}
+
+uint16_t pci_readw(pci_dev_t* pdev, uint8_t offset)
+{
+	return (uint16_t)((pci_readl(pdev, offset) >> ((offset & 2) * 8)) & 0xFFFF);
+}
+
+uint8_t pci_readb(pci_dev_t* pdev, uint8_t offset)
+{
+	return (uint8_t)((pci_readl(pdev, offset) >> ((offset & 3) * 8)) & 0xFF);
+}
+
+void pci_writel(pci_dev_t* pdev, uint8_t offset, uint32_t value)
+{
+	outl(CFG_ADDRESS, calc_pci_addr(pdev, offset));
+	outl(CFG_DATA, value);
+}
+
+void pci_writew(pci_dev_t* pdev, uint8_t offset, uint16_t value)
+{
+	uint32_t t, s, mask;
+	
+	t = pci_readl(pdev, offset);
+	mask = ~(((uint32_t)0xFFFF) << ((offset & 2) * 8));
+	s = (uint32_t)value << ((offset & 2) * 8);
+	t = (t&mask) | s;
+	pci_writel(pdev, offset, t);
+}
+
+void pci_writeb(pci_dev_t* pdev, uint8_t offset, uint8_t value)
+{
+	uint32_t t, s, mask;
+	
+	t = pci_readl(pdev, offset);
+	mask = ~(((uint32_t)0xFF) << ((offset & 3) * 8));
+	s = (uint32_t)value << ((offset & 3) * 8);
+	t = (t&mask) | s;
+	pci_writel(pdev, offset, t);
+}
+
 void pci_init()
 {
 	uint16_t vendorid;
 	uint8_t headertype;
 	int bus, dev, func;
+	pci_dev_t dummy;
 	
+	// populate the pci device list
+	// brute force loop of all buses and devices
 	for(bus=0; bus<256; bus++)
 	{
 		for(dev=0; dev<32; dev++)
 		{
 			func = 0;
-			vendorid = pci_config_read_word(bus, dev, func, PCI_CONFIG_W_VENDORID);
+			dummy.bus = bus; dummy.dev = dev; dummy.func = func;
+			vendorid = pci_readw(&dummy, CFG_W_VENDORID);
 			if(vendorid == 0xFFFF)
 				continue;
 			add_pci_dev(bus, dev, func);
 			
 			// check for multifunction
-			headertype = pci_config_read_byte(bus, dev, func, PCI_CONFIG_B_HEADERTYPE);
+			headertype = pci_readb(&dummy, CFG_B_HEADERTYPE);
 			if(headertype & 0x80)
 			{
 				// check the rest of the functions
 				for(func=1; func<8; func++)
 				{
-					vendorid = pci_config_read_word(bus, dev, func, PCI_CONFIG_W_VENDORID);
+					dummy.bus = bus; dummy.dev = dev; dummy.func = func;
+					vendorid = pci_readw(&dummy, CFG_W_VENDORID);
 					if(vendorid == 0xFFFF)
 						continue;
 					add_pci_dev(bus, dev, func);
@@ -106,8 +154,6 @@ void pci_init()
 			}
 		}
 	}
-	
-	pci_dump();
 }
 
 void pci_dump()
@@ -115,7 +161,7 @@ void pci_dump()
 	pci_dev_t* p = pci_dev_list;
 	while(p)
 	{
-		printf("%x:%x:%x | vend:%x dev:%x | class:%x subclass:%x\n",
+		printf("bdf:%x,%x,%x | vend:%x dev:%x | class:%x subclass:%x\n",
 			p->bus, p->dev, p->func,
 			p->vendorid, p->deviceid,
 			p->class, p->subclass);

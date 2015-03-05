@@ -20,59 +20,39 @@
 
 #include <stdint.h>
 
-#define PCI_CONFIG_ADDRESS 0xCF8
-#define PCI_CONFIG_DATA 0xCFC
+#define CFG_ADDRESS 0xCF8
+#define CFG_DATA 0xCFC
 
 // common configuration space header registers
-#define PCI_CONFIG_W_VENDORID		0x00
-#define PCI_CONFIG_W_DEVICEID		0x02
-#define PCI_CONFIG_W_COMMAND		0x04
-#define PCI_CONFIG_W_STATUS			0x06
-#define PCI_CONFIG_B_REVISION		0x08
-#define PCI_CONFIG_B_PROGIF			0x09
-#define PCI_CONFIG_B_SUBCLASSID		0x0A
-#define PCI_CONFIG_B_CLASSID		0x0B
-#define PCI_CONFIG_B_CACHELINESIZE	0x0C
-#define PCI_CONFIG_B_LATENCYTIMER	0x0D
-#define PCI_CONFIG_B_HEADERTYPE		0x0E
-#define PCI_CONFIG_B_BIST			0x0F
+#define CFG_W_VENDORID		0x00
+#define CFG_W_DEVICEID		0x02
+#define CFG_W_COMMAND		0x04
+#define CFG_W_STATUS		0x06
+#define CFG_B_REVISION		0x08
+#define CFG_B_PROGIF		0x09
+#define CFG_B_SUBCLASSID	0x0A
+#define CFG_B_CLASSID		0x0B
+#define CFG_B_CACHELINESIZE	0x0C
+#define CFG_B_LATENCYTIMER	0x0D
+#define CFG_B_HEADERTYPE	0x0E
+#define CFG_B_BIST			0x0F
 
-// class codes
-#define PCI_CLASS_PREDATED		0x00
-#define PCI_CLASS_MASSSTORAGE	0x01
-#define PCI_CLASS_NETWORK		0x02
-#define PCI_CLASS_DISPLAY		0x03
-#define PCI_CLASS_MULTIMEDIA	0x04
-#define PCI_CLASS_MEMORY		0x05
-#define PCI_CLASS_BRIDGE		0x06
-#define PCI_CLASS_SIMPLECOMM	0x07
-#define PCI_CLASS_BASESYSPERI	0x08
-#define PCI_CLASS_INPUT			0x09
-#define PCI_CLASS_DOCKING		0x0A
-#define PCI_CLASS_PROCESSOR		0x0B
-#define PCI_CLASS_SERIALBUS		0x0C
-#define PCI_CLASS_WIRELESS		0x0D
-#define PCI_CLASS_INTELLIGENTIO	0x0E
-#define PCI_CLASS_SATCOMM		0x0F
-#define PCI_CLASS_CRYPTO		0x10
-#define PCI_CLASS_SIGPROC		0x11
-#define PCI_CLASS_UNDEFINED		0xFF
-
-//// subclass codes
-#define PCI_SUBCLASS_OTHER		0x80
-// 0x00 predated
-#define PCI_SUBCLASS_NONVGA		0x00
-#define PCI_SUBCLASS_VGA		0x01
-// 0x01 mass storage
-#define PCI_SUBCLASS_SCSI		0x00
-#define PCI_SUBCLASS_IDE		0x01
-#define PCI_SUBCLASS_FLOPPY		0x02
-#define PCI_SUBCLASS_IPI		0x03
-#define PCI_SUBCLASS_RAID		0x04
-#define PCI_SUBCLASS_ATA		0x05
-#define PCI_SUBCLASS_SATA		0x06
-#define PCI_SUBCLASS_SAS		0x07
-// 0x02 network
+// headertype 00h registers
+#define CFG0_L_BAR0			0x10
+#define CFG0_L_BAR1			0x14
+#define CFG0_L_BAR2			0x18
+#define CFG0_L_BAR3			0x1C
+#define CFG0_L_BAR4			0x20
+#define CFG0_L_BAR5			0x24
+#define CFG0_L_CARDBUSCIS	0x28
+#define CFG0_W_SUBVENDORID	0x2C
+#define CFG0_W_SUBID		0x2E
+#define CFG0_L_EXPROM		0x30
+#define CFG0_B_CAPPOINT		0x34
+#define CFG0_B_INTLINE		0x3C
+#define CFG0_B_INTPIN		0x3D
+#define CFG0_B_MINGRANT		0x3E
+#define CFG0_B_MAXLATENCY	0x3F
 
 typedef struct _pci_dev_t {
 	uint8_t bus;
@@ -84,12 +64,19 @@ typedef struct _pci_dev_t {
 	uint8_t class;
 	uint8_t subclass;
 	
+	uint8_t headertype;
+	uint8_t intline;
+	
 	struct _pci_dev_t* next;
 } pci_dev_t;
 
-uint32_t pci_config_read_long(uint8_t bus, uint8_t device, uint8_t function, uint8_t reg);
-uint16_t pci_config_read_word(uint8_t bus, uint8_t device, uint8_t function, uint8_t reg);
-uint8_t pci_config_read_byte(uint8_t bus, uint8_t device, uint8_t function, uint8_t reg);
+// read/write functions for PCI configuration space
+uint32_t pci_readl(pci_dev_t* pdev, uint8_t offset);
+uint16_t pci_readw(pci_dev_t* pdev, uint8_t offset);
+uint8_t pci_readb(pci_dev_t* pdev, uint8_t offset);
+void pci_writel(pci_dev_t* pdev, uint8_t offset, uint32_t value);
+void pci_writew(pci_dev_t* pdev, uint8_t offset, uint16_t value);
+void pci_writeb(pci_dev_t* pdev, uint8_t offset, uint8_t value);
 
 void pci_init();
 void pci_dump();

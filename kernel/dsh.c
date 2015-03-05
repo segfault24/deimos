@@ -20,7 +20,46 @@
 
 #include <kernel/stdio.h>
 #include <kernel/string.h>
+#include <kernel/kalloc.h>
+#include <kernel/pci.h>
+
+extern int module_init();
+extern int module_kill();
 
 void dsh_loop()
 {
+	char* buf;
+	char c;
+	int i;
+	
+	buf = kmalloc(256);
+	while(1)
+	{
+		i = 0;
+		printf(">");
+		while(1)
+		{
+			c = getchar();
+			putchar(c);
+			if(c == '\n')
+				break;
+			buf[i] = c;
+			i++;
+		}
+		buf[i] = '\0';
+		
+		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
+			printf("pcidump\nheapdump\nnetstart\nnetstop\n");
+		else if(!strcmp(buf, "pcidump"))
+			pci_dump();
+		else if(!strcmp(buf, "heapdump"))
+			kheap_print();
+		else if(!strcmp(buf, "netstart"))
+			module_init();
+		else if(!strcmp(buf, "netstop"))
+			module_kill();
+		else
+			printf("invalid command\n");
+	}
+	kfree(buf);
 }
