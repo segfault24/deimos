@@ -18,6 +18,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <kernel/error.h>
 #include <i386/ioasm.h>
 #include <i386/isr.h>
 #include <i386/ps2.h>
@@ -126,7 +127,8 @@ static void kbd_isr()
 void kbd_init()
 {
 	update_leds();
-	register_isr(33, &kbd_isr);
+	if(request_irq(1, (unsigned int)&ctrl, &kbd_isr))
+		kpanic("could not register PS/2 keyboard interrupt handler");
 }
 
 uint8_t kbd_is_ascii_printable(uint8_t key)

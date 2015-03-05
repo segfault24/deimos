@@ -20,6 +20,10 @@
 
 #include <i386/idt.h>
 
+// calls the lidt asm instruction
+extern void idt_load();
+
+idt_ptr_t iptr;
 static idt_entry_t idt[IDT_NUM_ENTRIES];
 
 static idt_entry_t idt_create_entry(uint16_t selector, void (*offset), uint8_t flags)

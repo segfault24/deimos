@@ -88,7 +88,8 @@ void paging_init()
 	switch_directory(kernel_pd);
 	
 	// register the page fault handler
-	register_isr(14, &page_fault_handler);
+	if(request_isr(14, (unsigned int)&kernel_pd, &page_fault_handler))
+		kpanic("could not register page fault handler");
 }
 
 void switch_directory(page_directory_t* pd)

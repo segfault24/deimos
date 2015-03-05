@@ -17,6 +17,10 @@
 
 #include <i386/gdt.h>
 
+// calls the lgdt asm instruction
+extern void gdt_load();
+
+gdt_ptr_t gptr;
 static gdt_entry_t gdt[GDT_NUM_ENTRIES];
 
 static gdt_entry_t gdt_create_entry(uint32_t base, uint32_t limit, uint16_t flags)

@@ -60,8 +60,6 @@ typedef struct
 	uint32_t offset;
 } __attribute__((packed)) idt_ptr_t;
 
-idt_ptr_t iptr;
-
 // registers an isr in the idt
 void idt_register_isr(uint8_t interrupt, void (*func_ptr));
 // clears an isr in the idt
@@ -70,8 +68,5 @@ void idt_clear_isr(uint8_t interrupt);
 // sets up the table
 // this does not register any ISRs
 void idt_init();
-
-// calls the lidt asm instruction
-extern void idt_load();
 
 #endif

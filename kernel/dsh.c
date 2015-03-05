@@ -23,6 +23,8 @@
 #include <kernel/kalloc.h>
 #include <kernel/pci.h>
 
+#include <i386/isr.h>
+
 extern int module_init();
 extern int module_kill();
 
@@ -49,11 +51,13 @@ void dsh_loop()
 		buf[i] = '\0';
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
-			printf("pcidump\nheapdump\nnetstart\nnetstop\n");
-		else if(!strcmp(buf, "pcidump"))
+			printf("lspci\nlsheap\nlsint\nnetstart\nnetstop\n");
+		else if(!strcmp(buf, "lspci"))
 			pci_dump();
-		else if(!strcmp(buf, "heapdump"))
+		else if(!strcmp(buf, "lsheap"))
 			kheap_print();
+		else if(!strcmp(buf, "lsint"))
+			dump_interrupts();
 		else if(!strcmp(buf, "netstart"))
 			module_init();
 		else if(!strcmp(buf, "netstop"))

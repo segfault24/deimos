@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 #include <kernel/sched.h>
+#include <kernel/error.h>
 #include <i386/ioasm.h>
 #include <i386/isr.h>
 #include <i386/pit.h>
@@ -38,5 +39,6 @@ void pit_init()
 	outb(PIT_CH0_DATA, PIT_CH0_RLDL);
 	outb(PIT_CH0_DATA, PIT_CH0_RLDH);
 
-	register_isr(32, &tmr_isr);
+	if(request_irq(0, (unsigned int)&ticks, &tmr_isr))
+		kpanic("could not register PIT interrupt handler");
 }

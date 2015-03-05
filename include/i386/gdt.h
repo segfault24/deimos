@@ -61,12 +61,7 @@ typedef struct
 	uint32_t offset;
 } __attribute__((packed)) gdt_ptr_t;
 
-gdt_ptr_t gptr;
-
 // sets up the table
 void gdt_init();
-
-// calls the lgdt asm instruction
-extern void gdt_load();
 
 #endif
