@@ -108,6 +108,25 @@ void pic_send_eoi(uint8_t irq)
 	outb(PIC_MASTER_CMD, PIC_EOI);
 }
 
+int pic_is_spurious()
+{
+	uint16_t irqs = pic_read_reg(PIC_REG_ISR);
+	
+	if(!(irqs & 0x0080)) // check IRQ7
+	{
+		return 1;
+	}
+	else if(!(irqs & 0x8000)) // check IRQ15
+	{
+		outb(PIC_MASTER_CMD, PIC_EOI);
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 /*void pic_disable()
 {
 	outb(PIC_MASTER_DATA, PIC_DISABLE);

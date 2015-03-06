@@ -80,6 +80,11 @@ static handler_ptr_t handlers[256];
 // generic interrupt handler for use only by the asm wrappers
 void isr_handler(regs_t regs)
 {
+	// spurious interrupt?
+	if(regs.int_no == 39 || regs.int_no == 47)
+		if(pic_is_spurious())
+			return;
+	
 	int i = 0;
 	handler_ptr_t* h = &handlers[regs.int_no];
 	while(h && h->handler)
@@ -236,7 +241,7 @@ void interrupts_print_info()
 		handler_ptr_t* h = &handlers[i];
 		while(h && h->handler)
 		{
-			printf("int:%d\tid:0x%x\thandler:0x%x\n", i, h->id, h->handler);
+			printf("int:%x\tid:0x%x\thandler:0x%x\n", i, h->id, h->handler);
 			h = h->next;
 		}
 	}
