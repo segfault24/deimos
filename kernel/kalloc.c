@@ -184,6 +184,9 @@ void kfree(void* ptr)
 {
 	header_t* h;
 	
+	if(!ptr)
+		return;
+	
 	h = (header_t*)(ptr - sizeof(header_t));
 	h->allocated = 0;
 	
