@@ -156,12 +156,12 @@ void pci_init()
 	}
 }
 
-void pci_dump()
+void pci_print_info()
 {
 	pci_dev_t* p = pci_dev_list;
 	while(p)
 	{
-		printf("bdf:%x,%x,%x | vend:%x dev:%x | class:%x subclass:%x\n",
+		printf("bdf:%d,%d,%d | vend:%x dev:%x | class:%x subclass:%x\n",
 			p->bus, p->dev, p->func,
 			p->vendorid, p->deviceid,
 			p->class, p->subclass);
