@@ -228,7 +228,7 @@ void isr_init()
 	idt_register_isr(47, &irq15w);
 }
 
-void dump_interrupts()
+void interrupts_print_info()
 {
 	size_t i;
 	for(i=0; i<256; i++)
@@ -236,7 +236,7 @@ void dump_interrupts()
 		handler_ptr_t* h = &handlers[i];
 		while(h && h->handler)
 		{
-			printf("int:%x\tid:%x\thandler:%x\n", i, h->id, h->handler);
+			printf("int:%d\tid:0x%x\thandler:0x%x\n", i, h->id, h->handler);
 			h = h->next;
 		}
 	}

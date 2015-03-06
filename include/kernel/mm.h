@@ -22,4 +22,6 @@
 
 void mm_init(multiboot_info_t* mbt);
 
+void memory_print_info();
+
 #endif

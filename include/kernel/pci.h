@@ -79,7 +79,7 @@ void pci_writew(pci_dev_t* pdev, uint8_t offset, uint16_t value);
 void pci_writeb(pci_dev_t* pdev, uint8_t offset, uint8_t value);
 
 void pci_init();
-void pci_dump();
+void pci_print_info();
 pci_dev_t* pci_search(uint16_t vendorid, uint16_t deviceid);
 
 #endif

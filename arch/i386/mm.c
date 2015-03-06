@@ -19,6 +19,7 @@
 
 #include <kernel/multiboot.h>
 #include <kernel/stdlib.h>
+#include <kernel/stdio.h>
 #include <kernel/error.h>
 #include <kernel/kalloc.h>
 #include <kernel/mm.h>
@@ -44,4 +45,12 @@ void mm_init(multiboot_info_t* mbt)
 	
 	// setup the kernel heap
 	kheap_init(&KERNEL_END, KERNEL_VMA+KERNEL_PMA+KERNEL_SIZE-(int)&KERNEL_END);
+}
+
+void memory_print_info()
+{
+	printf("physical memory\n");
+	printf("\ttotal: %d KiB\n", 4*num_total_frames());
+	printf("\t free: %d KiB\n", 4*num_free_frames());
+	printf("\t used: %d KiB\n", 4*num_used_frames());
 }

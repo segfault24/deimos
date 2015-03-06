@@ -39,9 +39,10 @@ void release_irq(unsigned int irq, unsigned int id);
 
 void enable_interrupts();
 void disable_interrupts();
-void dump_interrupts();
+
 void dump_regs(regs_t* regs);
 
 void isr_init();
+void interrupts_print_info();
 
 #endif
