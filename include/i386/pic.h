@@ -64,4 +64,7 @@ uint16_t pic_read_reg(uint8_t pic_reg);
 // tell the PICs we're done
 void pic_send_eoi(uint8_t irq);
 
+// used to check if the interrupt was in mistake
+int pic_is_spurious();
+
 #endif
