@@ -20,6 +20,8 @@
 
 #include <kernel/stdio.h>
 #include <kernel/string.h>
+
+#include <kernel/mm.h>
 #include <kernel/kalloc.h>
 #include <kernel/pci.h>
 
@@ -33,6 +35,8 @@ void dsh_loop()
 	char* buf;
 	char c;
 	int i;
+	
+	printf("DeimOS (c)2015 Built on %s at %s\n", __DATE__, __TIME__);
 	
 	buf = kmalloc(256);
 	while(1)
@@ -51,19 +55,15 @@ void dsh_loop()
 		buf[i] = '\0';
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
-			printf("lspci\nlsheap\nlsint\nnetstart\nnetstop\n");
-		else if(!strcmp(buf, "lspci"))
-			pci_dump();
-		else if(!strcmp(buf, "lsheap"))
-			kheap_print();
-		else if(!strcmp(buf, "lsint"))
-			dump_interrupts();
-		else if(!strcmp(buf, "netstart"))
-			module_init();
-		else if(!strcmp(buf, "netstop"))
-			module_kill();
-		else
-			printf("invalid command\n");
+			printf("lspci\nlsmem\nlsheap\nlsint\nnetstart\nnetstop\n");
+		else if(!strcmp(buf, "lspci")) pci_print_info();
+		else if(!strcmp(buf, "lsmem")) memory_print_info();
+		else if(!strcmp(buf, "lsheap")) heap_print_info();
+		else if(!strcmp(buf, "lsint")) interrupts_print_info();
+		else if(!strcmp(buf, "netstart")) module_init();
+		else if(!strcmp(buf, "netstop")) module_kill();
+		else if(!strcmp(buf, "")) ;
+		else printf("invalid command\n");
 	}
 	kfree(buf);
 }

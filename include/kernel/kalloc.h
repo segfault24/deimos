@@ -22,7 +22,7 @@
 #include <i386/paging.h>
 
 void kheap_init(void* start, size_t size);
-void kheap_print();
+void heap_print_info();
 
 void* kmalloc(size_t size);
 void* kmalloc_a(size_t size);

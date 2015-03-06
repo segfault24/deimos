@@ -23,13 +23,13 @@
 
 void kwarn(const char* message)
 {
-	tty_setcolor(VGA_YELLOW, VGA_BLACK);
+	//tty_setcolor(VGA_YELLOW, VGA_BLACK);
 	printf("\nWarning: %s\n", message);
 }
 
 void kerror(const char* message)
 {
-	tty_setcolor(VGA_LIGHT_RED, VGA_BLACK);
+	//tty_setcolor(VGA_LIGHT_RED, VGA_BLACK);
 	printf("\nError: %s\n", message);
 }
 

@@ -151,15 +151,33 @@ void kheap_init(void* start, size_t size)
 	kheap->prev = 0;
 }
 
-void kheap_print()
+void heap_print_info()
 {
+	unsigned int free = 0;
+	unsigned int used = 0;
+	
+	header_t* h = kheap;
+	while(h)
+	{
+		if(h->allocated)
+			used += h->size;
+		else
+			free += h->size;
+		h = h->next;
+	}
+	printf("kernel heap\n");
+	printf("\ttotal: %d KiB\n", (free + used)/1024);
+	printf("\t free: %d KiB\n", free/1024);
+	printf("\t used: %d KiB\n", used/1024);
+	
+	/** used for heap debugging
 	header_t* h = kheap;
 	while(h)
 	{
 		printf("%x-%x-%x %x %x\n", h->prev, h, h->next, h->allocated, h->size);
 		h = h->next;
 	}
-	printf("\n");
+	printf("\n");*/
 }
 
 void kfree(void* ptr)

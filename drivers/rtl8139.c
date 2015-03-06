@@ -40,9 +40,10 @@
 #define CONFIG1		0x52	// 1
 #define TSAD		0x60	// 2
 
-static pci_dev_t* rtl_pci_dev;
-static net_dev_t* rtl_net_dev;
+static pci_dev_t* rtl_pci_dev = 0;
+static net_dev_t* rtl_net_dev = 0;
 
+static int started = 0;
 static uint32_t iobase;
 
 static void rtl_isr_handler()
@@ -53,10 +54,20 @@ static void rtl_isr_handler()
 
 int module_init()
 {
+	// make sure we're not running already
+	if(started)
+	{
+		kwarn("rtl8139: already started");
+		return 1; // no cleaning
+	}
+	
 	// start by searching for the device
 	rtl_pci_dev = pci_search(0x10EC, 0x8139);
 	if(!rtl_pci_dev)
-		kpanic("rtl8139: could not find RTL8139 device");
+	{
+		kwarn("rtl8139: could not find RTL8139 device");
+		goto cleanandfail;
+	}
 	
 	// enable bus mastering
 	uint16_t c = pci_readw(rtl_pci_dev, CFG_W_COMMAND);
@@ -73,35 +84,56 @@ int module_init()
 	// setup our net_dev_t
 	rtl_net_dev = kmalloc(sizeof(net_dev_t));
 	if(!rtl_net_dev)
-		kpanic("rtl8139: could not allocate memory for net dev");
+	{
+		kwarn("rtl8139: could not allocate memory for net dev");
+		goto cleanandfail;
+	}
 	memset(rtl_net_dev, 0, sizeof(net_dev_t));
 	
 	// receive buffers setup
 	
-	
 	// transmit buffers setup
-	
 	
 	// configure receiver
 	outl(iobase + RCR, 0x0000008F); // accept all packets, dont wrap rx buffer
 	
 	// register the net_dev_t
 	if(register_net_dev(rtl_net_dev))
-		kpanic("rtl8139: could not register net dev");
+	{
+		kwarn("rtl8139: could not register net dev");
+		goto cleanandfail;
+	}
 	
 	// enable rx and tx
 	outb(iobase + CR, 0x0C);
 	
 	// iterrupt setup
 	if(request_irq(rtl_pci_dev->intline, (unsigned int)&rtl_pci_dev, &rtl_isr_handler))
-		kpanic("rtl8139: could not register irq");
+	{
+		kwarn("rtl8139: could not register irq");
+		goto cleanandfail;
+	}
 	outw(iobase + IMR, 0x0005); // enables TOK and ROK irqs on RTL
 	
+	started = 1;
 	return 0;
+	
+	cleanandfail:
+		kfree(rtl_net_dev);rtl_net_dev = 0;
+		//kfree(rx_buf);rx_buf = 0;
+		//kfree(tx_buf);tx_buf = 0;
+		return 1;
 }
 
 int module_kill()
 {
+	// make sure we're actually running
+	if(!started)
+	{
+		kwarn("rtl8139: can't kill something that's not running");
+		return 1;
+	}
+	
 	// clear the isr handle and the device's interrupts
 	outw(iobase + IMR, 0x0000);
 	release_irq(rtl_pci_dev->intline, (unsigned int)&rtl_pci_dev);
@@ -111,14 +143,15 @@ int module_kill()
 	
 	// unregister and free the net_dev_t
 	if(remove_net_dev(rtl_net_dev))
-		kpanic("rtl8139: could not remove net dev");
-	if(rtl_net_dev)
-		kfree(rtl_net_dev);
+		kwarn("rtl8139: could not remove net dev");
+	kfree(rtl_net_dev);
 	
 	// free the rx and tx buffers
+	
 	
 	// put the device to sleep
 	
 	
+	started = 0;
 	return 0;
 }
