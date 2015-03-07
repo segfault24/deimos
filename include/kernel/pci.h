@@ -46,7 +46,7 @@
 #define CFG0_L_BAR5			0x24
 #define CFG0_L_CARDBUSCIS	0x28
 #define CFG0_W_SUBVENDORID	0x2C
-#define CFG0_W_SUBID		0x2E
+#define CFG0_W_SUBSYSID		0x2E
 #define CFG0_L_EXPROM		0x30
 #define CFG0_B_CAPPOINT		0x34
 #define CFG0_B_INTLINE		0x3C
