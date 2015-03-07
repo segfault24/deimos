@@ -46,7 +46,7 @@ iso: deimos.iso
 drivers: $(DRIVEROBJS)
 
 run: iso
-	qemu -cdrom deimos.iso -monitor stdio -net nic,model=rtl8139
+	qemu -cdrom deimos.iso -monitor stdio -device rtl8139
 
 clean:
 	rm -f *.o */*.o */*/*.o deimos.bin deimos.iso

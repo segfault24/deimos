@@ -15,6 +15,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <kernel/stdio.h>
+#include <kernel/string.h>
+#include <kernel/kalloc.h>
 #include <kernel/net.h>
 
 static net_dev_t* net_dev_list = 0;
@@ -71,12 +74,30 @@ int remove_net_dev(net_dev_t* dev)
 
 pkt_buf_t* net_alloc_pkt_buf(size_t size)
 {
-	size++; // dummy
-	return 0;
+	// allocate the data buffer and struct at the same time
+	pkt_buf_t* p = kmalloc(size + sizeof(pkt_buf_t));
+	if(!p)
+		return 0;
+	p->data = (((void*)p) + sizeof(pkt_buf_t));
+	return p;
+}
+
+void net_cpy_pkt(void* src, pkt_buf_t* dest, size_t size)
+{
+	memcpy(dest->data, src, size);
+	dest->len = size;
 }
 
 void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt)
 {
 	dev++; // dummy
-	pkt++; // dummy
+	
+	/*printf("received packet from dev:%x len:%x\n", dev, pkt->len);
+	size_t i;
+	for(i=0; i<pkt->len; i++)
+	{
+		printf(" %x", *(pkt->data + i));
+	}*/
+	
+	kfree(pkt);
 }
