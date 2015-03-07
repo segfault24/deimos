@@ -20,7 +20,7 @@
 
 #include <kernel/stdio.h>
 #include <kernel/string.h>
-
+#include <kernel/tty.h>
 #include <kernel/mm.h>
 #include <kernel/kalloc.h>
 #include <kernel/pci.h>
@@ -55,13 +55,14 @@ void dsh_loop()
 		buf[i] = '\0';
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
-			printf("lspci\nlsmem\nlsheap\nlsint\nnetstart\nnetstop\n");
+			printf("lspci\nlsmem\nlsheap\nlsint\nnetstart\nnetstop\nclear\n");
 		else if(!strcmp(buf, "lspci")) pci_print_info();
 		else if(!strcmp(buf, "lsmem")) memory_print_info();
 		else if(!strcmp(buf, "lsheap")) heap_print_info();
 		else if(!strcmp(buf, "lsint")) interrupts_print_info();
 		else if(!strcmp(buf, "netstart")) module_init();
 		else if(!strcmp(buf, "netstop")) module_kill();
+		else if(!strcmp(buf, "clear")) tty_clear();
 		else if(!strcmp(buf, "")) ;
 		else printf("invalid command\n");
 	}

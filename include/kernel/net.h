@@ -32,11 +32,13 @@ typedef struct _pkt_buf_t {
 
 void net_init();
 
-// return non-zero on failure
+// net dev operations, return non-zero on failure
 int register_net_dev(net_dev_t* dev);
 int remove_net_dev(net_dev_t* dev);
-
-pkt_buf_t* net_alloc_pkt_buf(size_t size);
 void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt);
+
+// packet operations
+pkt_buf_t* net_alloc_pkt_buf(size_t size);
+void net_cpy_pkt(void* src, pkt_buf_t* dest, size_t size);
 
 #endif
