@@ -28,8 +28,6 @@ void net_init()
 
 int register_net_dev(net_dev_t* dev)
 {
-	net_dev_t* n;
-	
 	dev->next = 0;
 	if(!net_dev_list)
 	{
@@ -37,7 +35,7 @@ int register_net_dev(net_dev_t* dev)
 		return 0;
 	}
 	
-	n = net_dev_list;
+	net_dev_t* n = net_dev_list;
 	while(n->next)
 		n = n->next;
 	n->next = dev;
@@ -46,8 +44,6 @@ int register_net_dev(net_dev_t* dev)
 
 int remove_net_dev(net_dev_t* dev)
 {
-	net_dev_t* n;
-	
 	if(!net_dev_list)
 		return 1;
 	
@@ -58,7 +54,7 @@ int remove_net_dev(net_dev_t* dev)
 		return 0;
 	}
 	
-	n = net_dev_list;
+	net_dev_t* n = net_dev_list;
 	while(n->next)
 	{
 		if(n->next == dev)
