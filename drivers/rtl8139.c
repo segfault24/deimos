@@ -113,7 +113,7 @@ static void rtl_isr_handler()
 			unsigned short rx_size = rx_header >> 16;
 			unsigned short pkt_size = rx_size - 4;
 			//putchar('.');
-			printf("rx_ptr:%x status:%x rxsz:%x ", rx_ptr, rx_status, rx_size);
+			//printf("rx_ptr:%x status:%x rxsz:%x ", rx_ptr, rx_status, rx_size);
 			
 			if(rx_status == 0) // TODO: check status first
 			{
@@ -137,7 +137,7 @@ static void rtl_isr_handler()
 			
 			// update the read pointer
 			rx_ptr = (rx_ptr + rx_size + 4 + 3) & ~0x3;
-			printf("new_ptr:%x\n", rx_ptr);
+			//printf("new_ptr:%x\n", rx_ptr);
 			
 			// tell the RTL about it
 			outb(iobase + CAPR, rx_ptr - 16);
@@ -165,7 +165,7 @@ static void rtl_hardware_init()
 	outw(iobase + IMR, 0xFFFF);				// enables irqs
 }
 
-int module_init()
+int rtl_module_init()
 {
 	// make sure we're not running already
 	if(started)
@@ -234,7 +234,7 @@ int module_init()
 		return 1;
 }
 
-int module_kill()
+int rtl_module_kill()
 {
 	// make sure we're actually running
 	if(!started)
