@@ -29,6 +29,7 @@
 #include <kernel/sched.h>
 #include <kernel/pci.h>
 #include <kernel/net.h>
+#include <kernel/vfs.h>
 
 #include <kernel/dsh.h>
 
@@ -50,6 +51,7 @@ void kmain(multiboot_info_t* mbt)
 	
 	pci_init(); // scan the pci bus
 	net_init(); // sets up the networking stack
+	vfs_init(); // virtual file system setup
 	
 	dsh_loop();
 }
