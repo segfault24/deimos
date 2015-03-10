@@ -24,11 +24,14 @@
 #include <kernel/mm.h>
 #include <kernel/kalloc.h>
 #include <kernel/pci.h>
+#include <kernel/disk.h>
 
 #include <i386/isr.h>
 
-extern int module_init();
-extern int module_kill();
+extern int rtl_module_init();
+extern int rtl_module_kill();
+extern int ata_module_init();
+extern int ata_module_kill();
 
 void dsh_loop()
 {
@@ -55,15 +58,20 @@ void dsh_loop()
 		buf[i] = '\0';
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
-			printf("lspci\nlsmem\nlsheap\nlsint\nnetstart\nnetstop\nclear\n");
+		{
+			printf("clear\nlspci\nlsmem\nlsheap\nlsint\n");
+			printf("rtlstart\nrtlstop\natastart\natastop\n");
+		}
+		else if(!strcmp(buf, "clear")) tty_clear();
 		else if(!strcmp(buf, "lspci")) pci_print_info();
 		else if(!strcmp(buf, "lsmem")) memory_print_info();
 		else if(!strcmp(buf, "lsheap")) heap_print_info();
 		else if(!strcmp(buf, "lsint")) interrupts_print_info();
-		else if(!strcmp(buf, "netstart")) module_init();
-		else if(!strcmp(buf, "netstop")) module_kill();
-		else if(!strcmp(buf, "clear")) tty_clear();
-		else if(!strcmp(buf, "")) ;
+		else if(!strcmp(buf, "lsdisk")) disk_print_info();
+		else if(!strcmp(buf, "rtlstart")) rtl_module_init();
+		else if(!strcmp(buf, "rtlstop")) rtl_module_kill();
+		else if(!strcmp(buf, "atastart")) ata_module_init();
+		else if(!strcmp(buf, "atastop")) ata_module_kill();
 		else printf("invalid command\n");
 	}
 	kfree(buf);
