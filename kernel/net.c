@@ -17,7 +17,10 @@
 
 #include <kernel/stdio.h>
 #include <kernel/string.h>
+#include <kernel/endian.h>
 #include <kernel/kalloc.h>
+#include <kernel/ip.h>
+#include <kernel/arp.h>
 #include <kernel/net.h>
 
 static net_dev_t* net_dev_list = 0;
@@ -87,13 +90,17 @@ void net_cpy_pkt(void* src, pkt_buf_t* dest, size_t size)
 void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt)
 {
 	dev++; // dummy
+	//printf("received packet from dev:%x len:%x\n", dev, pkt->len);
 	
-	/*printf("received packet from dev:%x len:%x\n", dev, pkt->len);
-	size_t i;
-	for(i=0; i<pkt->len; i++)
-	{
-		printf(" %x", *(pkt->data + i));
-	}*/
+	// apply ethernet header
+	ether_pkt_t* e = (ether_pkt_t*) pkt->data;
+	// check ethertype
+	if(ENDIANSWAP16(e->ethertype) == ETHERTYPE_ARP)
+		arp_rx((arp_pkt_t*) &(e->payload));
+	else if(ENDIANSWAP16(e->ethertype) == ETHERTYPE_IP4)
+		ip_rx((ip_pkt_t*) &(e->payload));
+	else
+		printf("unsupported ethertype: 0x%x\n", ENDIANSWAP16(e->ethertype));
 	
 	kfree(pkt);
 }
