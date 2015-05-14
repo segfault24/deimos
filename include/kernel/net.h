@@ -20,15 +20,30 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <kernel/arp.h>
+
+#define ETHERTYPE_IP4 0x0800
+#define ETHERTYPE_ARP 0x0806
 
 typedef struct _net_dev_t {
 	struct _net_dev_t* next;
 } net_dev_t;
 
 typedef struct _pkt_buf_t {
-	uint8_t* data;
 	size_t len;
+	uint8_t* data;
 } pkt_buf_t;
+
+typedef struct _ether_pkt_t {
+	uint16_t dst_hi;
+	uint16_t dst_mid;
+	uint16_t dst_lo;
+	uint16_t src_hi;
+	uint16_t src_mid;
+	uint16_t src_lo;
+	uint16_t ethertype;
+	uint8_t* payload;
+} __attribute__((packed)) ether_pkt_t;
 
 void net_init();
 
