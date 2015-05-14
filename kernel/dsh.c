@@ -46,7 +46,7 @@ void dsh_loop()
 	{
 		i = 0;
 		printf(">");
-		while(1)
+		while(i<255)
 		{
 			c = getchar();
 			putchar(c);
@@ -59,8 +59,8 @@ void dsh_loop()
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
 		{
-			printf("clear\nlspci\nlsmem\nlsheap\nlsint\n");
-			printf("rtlstart\nrtlstop\natastart\natastop\n");
+			printf("clear | lspci | lsmem | lsheap | lsint | lsdisk\n");
+			printf("rtlstart | rtlstop | atastart | atastop\n");
 		}
 		else if(!strcmp(buf, "clear")) tty_clear();
 		else if(!strcmp(buf, "lspci")) pci_print_info();
@@ -72,6 +72,7 @@ void dsh_loop()
 		else if(!strcmp(buf, "rtlstop")) rtl_module_kill();
 		else if(!strcmp(buf, "atastart")) ata_module_init();
 		else if(!strcmp(buf, "atastop")) ata_module_kill();
+		else if(!strcmp(buf, "")) putchar(' ');
 		else printf("invalid command\n");
 	}
 	kfree(buf);
