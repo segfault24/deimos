@@ -1,4 +1,5 @@
 #!/bin/bash
+#test123
 
 ARCH=i386
 ARCHDIR=arch/$(ARCH)
@@ -16,12 +17,9 @@ include kernel/make.config
 include drivers/make.config
 
 # dummy default target (see below)
-_all: all
+_all: default
 
-# compile kernel
-deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(ARCHDIR)/kernel.ld
-	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(CFLAGS) $(LDFLAGS)
-
+########################
 # generic compile rules
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
@@ -29,26 +27,37 @@ deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(ARCHDIR)/kernel.ld
 %.o: %.s
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-# create a bootable iso
+# compile kernel
+deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(ARCHDIR)/kernel.ld
+	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(CFLAGS) $(LDFLAGS)
+
+# create a bootable CD iso
 deimos.iso: deimos.bin
 	mkdir -p isodir/boot/grub
 	cp $< isodir/boot/$<
-	echo menuentry "deimos" { >> isodir/boot/grub/grub.cfg
-	echo multiboot /boot/$< >> isodir/boot/grub/grub.cfg
-	echo } >> isodir/boot/grub/grub.cfg
+	cp grub.cfg isodir/boot/grub/grub.cfg
 	grub-mkrescue -o $@ isodir
 	rm -rf isodir
 
+########################
 # actual targets
-all: kernel iso drivers
+default: kernel drivers
 kernel: deimos.bin
-iso: deimos.iso
 drivers: $(DRIVEROBJS)
+iso: deimos.iso
 
 run: iso
 	qemu -cdrom deimos.iso -monitor stdio -device rtl8139
 
+pxe: kernel
+	rm -rf ~/tftp_dir/*
+	grub-mknetdir --net-directory=/home/austin/tftp_dir/
+	cp deimos.bin ~/tftp_dir/boot
+	cp grub.cfg ~/tftp_dir/boot/grub/
+	chmod -R 777 ~/tftp_dir/*
+
 clean:
+	rm -rf ~/tftp_dir/*
 	rm -f *.o */*.o */*/*.o deimos.bin deimos.iso
 
 .PHONY: all kernel iso run clean

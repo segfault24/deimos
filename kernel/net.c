@@ -95,12 +95,18 @@ void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt)
 	// apply ethernet header
 	ether_pkt_t* e = (ether_pkt_t*) pkt->data;
 	// check ethertype
-	if(ENDIANSWAP16(e->ethertype) == ETHERTYPE_ARP)
-		arp_rx((arp_pkt_t*) &(e->payload));
-	else if(ENDIANSWAP16(e->ethertype) == ETHERTYPE_IP4)
-		ip_rx((ip_pkt_t*) &(e->payload));
-	else
-		printf("unsupported ethertype: 0x%x\n", ENDIANSWAP16(e->ethertype));
+	switch(ENDIANSWAP16(e->ethertype))
+	{
+		case ETHERTYPE_ARP:
+			arp_rx((arp_pkt_t*) &(e->payload));
+			break;
+		case ETHERTYPE_IP4:
+			ip_rx((ip_pkt_t*) &(e->payload));
+			break;
+		default:
+			//printf("unsupported ethertype: 0x%x\n", ENDIANSWAP16(e->ethertype));
+			break;
+	}
 	
 	kfree(pkt);
 }
