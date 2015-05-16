@@ -22,6 +22,8 @@
 
 void ip_rx(ip_pkt_t* ip)
 {
-	ip++; // dummy
-	//printf("ip packet\n");
+	printf("ip pro=%u src=%u.%u.%u.%u dst=%u.%u.%u.%u\n",
+		ip->protocol, ip->source[0], ip->source[1], ip->source[2], ip->source[3],
+		ip->destination[0], ip->destination[1], ip->destination[2], ip->destination[3]
+	);
 }
