@@ -20,40 +20,10 @@
 #include <kernel/endian.h>
 #include <kernel/net.h>
 #include <kernel/arp.h>
-
-static void print_mac(uint16_t hi, uint16_t mid, uint16_t lo)
-{
-	printf("%x:%x:%x:%x:%x:%x",
-		(uint8_t)(hi >> 8),
-		(uint8_t)(hi >> 0),
-		(uint8_t)(mid >> 8),
-		(uint8_t)(mid >> 0),
-		(uint8_t)(lo >> 8),
-		(uint8_t)(lo >> 0)
-	);
-}
-
-static void print_ip(uint32_t p)
-{
-	printf("%u.%u.%u.%u",
-		(uint8_t)(p >> 0),
-		(uint8_t)(p >> 8),
-		(uint8_t)(p >> 16),
-		(uint8_t)(p >> 24)
-	);
-}
+#include <kernel/ip.h>
 
 void arp_rx(arp_pkt_t* arp)
 {
-	/*uint8_t* b = (uint8_t*)arp;
-	size_t i;
-	for(i=0; i<28; i++)
-	{
-		printf("%x ", *b);
-		b++;
-	}
-	printf("\n");*/
-	
 	// validate arp packet
 	if(
 		ENDIANSWAP16(arp->htype) != HTYPE_ETHERNET ||
@@ -72,17 +42,11 @@ void arp_rx(arp_pkt_t* arp)
 		return;
 	}
 	
-	printf("arp op:%x\n", arp->oper);
-	
-	printf("  src\t");
-	print_mac(arp->sha_hi, arp->sha_mid, arp->sha_lo);
-	printf("\t");
-	print_ip(arp->spa);
-	printf("\n");
-	
-	printf("  dst\t");
-	print_mac(arp->tha_hi, arp->tha_mid, arp->tha_lo);
-	printf("\t");
-	print_ip(arp->tpa);
-	printf("\n");
+	printf("arp op=%u src=%x:%x:%x:%x:%x:%x/%u.%u.%u.%u dst=%x:%x:%x:%x:%x:%x/%u.%u.%u.%u\n",
+		ENDIANSWAP16(arp->oper),
+		arp->sha[0], arp->sha[1], arp->sha[2], arp->sha[3], arp->sha[4], arp->sha[5],
+		arp->spa[0], arp->spa[1], arp->spa[2], arp->spa[3],
+		arp->tha[0], arp->tha[1], arp->tha[2], arp->tha[3], arp->tha[4], arp->tha[5],
+		arp->tpa[0], arp->tpa[1], arp->tpa[2], arp->tpa[3]
+	);
 }

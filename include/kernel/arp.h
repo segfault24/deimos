@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <kernel/net.h>
+#include <kernel/ip.h>
 
 #define HTYPE_ETHERNET 1
 #define PTYPE_IP4 ETHERTYPE_IP4
@@ -35,14 +36,10 @@ typedef struct _arp_pkt_t {
 	uint8_t hlen;		// hardware address length
 	uint8_t plen;		// protocol address length
 	uint16_t oper;		// operation
-	uint16_t sha_hi;	// sender hardware address
-	uint16_t sha_mid;	//
-	uint16_t sha_lo;	//
-	uint32_t spa;		// sender protocol address
-	uint16_t tha_hi;	// target hardware address
-	uint16_t tha_mid;	//
-	uint16_t tha_lo;	//
-	uint32_t tpa;		// target protocol address
+	uint8_t sha[6];		// sender hardware address
+	uint8_t spa[4];		// sender protocol address
+	uint8_t tha[6];		// target hardware address
+	uint8_t tpa[4];		// target protocol address
 } __attribute__((packed)) arp_pkt_t;
 
 void arp_rx(arp_pkt_t* arp);
