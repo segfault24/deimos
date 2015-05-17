@@ -15,38 +15,25 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KERNEL_NET_H
-#define KERNEL_NET_H
+#ifndef KERNEL_ETHER_H
+#define KERNEL_ETHER_H
 
-#include <stddef.h>
 #include <stdint.h>
-#include <kernel/ether.h>
-#include <kernel/arp.h>
-#include <kernel/ip.h>
 
-#define NETDEV_ETHERNET 1
+#define ETHERTYPE_IP4 0x0800
+#define ETHERTYPE_ARP 0x0806
 
-typedef struct _net_dev_t {
-	int type;
-	// TODO: link layer address
-	
-	struct _net_dev_t* next; // not for driver to touch
-} net_dev_t;
+typedef struct _ether_addr_t {
+	uint8_t octet[6];
+} __attribute__((packed)) ether_addr_t;
 
-typedef struct _pkt_buf_t {
-	size_t len;
-	uint8_t* data;
-} pkt_buf_t;
+typedef struct _ether_pkt_t {
+	uint8_t dst[6];
+	uint8_t src[6];
+	uint16_t ethertype;
+	uint8_t* payload;
+} __attribute__((packed)) ether_pkt_t;
 
-void net_init();
-
-// net dev operations, return non-zero on failure
-int register_net_dev(net_dev_t* dev);
-int remove_net_dev(net_dev_t* dev);
-void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt);
-
-// packet operations
-pkt_buf_t* net_alloc_pkt_buf(size_t size);
-void net_cpy_pkt(void* src, pkt_buf_t* dest, size_t size);
+void ether_rx(ether_pkt_t* ether);
 
 #endif

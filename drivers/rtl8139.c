@@ -21,6 +21,8 @@
 //    is parsing PCI BARs our job, or the PCI subsystem's?
 //    also, we didnt really check the BARs.. we just assumed BAR0 is I/O 
 
+#include <stddef.h>
+#include <stdint.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/kalloc.h>
@@ -31,7 +33,14 @@
 #include <kernel/net.h>
 
 // I/O space register offsets
-#define RBSTART		0x30	// 4 bytes
+#define ID0			0x00	// 1		MAC address
+#define ID1			0x01	// 1
+#define ID2			0x02	// 1
+#define ID3			0x03	// 1
+#define ID4			0x04	// 1
+#define ID5			0x05	// 1
+
+#define RBSTART		0x30	// 4		
 #define CR			0x37	// 1		command
 #define CAPR		0x38	// 2		current address of packet read
 #define IMR			0x3C	// 2		interrupt mask
@@ -71,13 +80,14 @@
 // our settings
 #define RX_BUF_SIZE	32*1024
 #define RX_BUF_PAD	16+1500
-#define RX_CONFIG RBLEN32K|MXDMA256|WRAP|AAP|APM|AM|AB
+#define RX_CONFIG	RBLEN32K|MXDMA256|WRAP|AAP|APM|AM|AB
 
 static pci_dev_t* rtl_pci_dev = 0;
 static net_dev_t* rtl_net_dev = 0;
 
 static int started = 0;
 static unsigned int iobase;
+static uint8_t mac[6];
 
 static uint8_t* rx_buf = 0;
 static unsigned int rx_buf_phys = 0;
@@ -163,6 +173,14 @@ static void rtl_hardware_init()
 	outl(iobase + RCR, RX_CONFIG);			// receiver configuation
 	outl(iobase + RBSTART, rx_buf_phys);	// set the rx buffer
 	outw(iobase + IMR, 0xFFFF);				// enables irqs
+	
+	// grab the cards MAC address
+	mac[0] = inb(iobase + ID0);
+	mac[1] = inb(iobase + ID1);
+	mac[2] = inb(iobase + ID2);
+	mac[3] = inb(iobase + ID3);
+	mac[4] = inb(iobase + ID4);
+	mac[5] = inb(iobase + ID5);
 }
 
 int rtl_module_init()
@@ -194,9 +212,10 @@ int rtl_module_init()
 		goto cleanandfail;
 	}
 	memset(rtl_net_dev, 0, sizeof(net_dev_t));
+	rtl_net_dev->type = NETDEV_ETHERNET;
 	
 	// receive buffers setup
-	// TODO: URGENT kmalloc_ap is not guaranteed to be physicall contiguous
+	// TODO: URGENT kmalloc_ap is not guaranteed to be physically contiguous
 	rx_buf = kmalloc_ap(RX_BUF_SIZE + RX_BUF_PAD, (phys_addr*)&rx_buf_phys);
 	if(!rx_buf)
 	{
@@ -258,8 +277,7 @@ int rtl_module_kill()
 	// free the rx and tx buffers
 	kfree(rx_buf);
 	
-	// put the device to sleep
-	
+	// TODO: put the device to sleep
 	
 	started = 0;
 	return 0;

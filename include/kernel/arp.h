@@ -18,9 +18,8 @@
 #ifndef KERNEL_ARP_H
 #define KERNEL_ARP_H
 
-#include <stddef.h>
 #include <stdint.h>
-#include <kernel/net.h>
+#include <kernel/ether.h>
 #include <kernel/ip.h>
 
 #define HTYPE_ETHERNET 1
@@ -31,17 +30,23 @@
 #define OPER_REPLY 2
 
 typedef struct _arp_pkt_t {
-	uint16_t htype;		// hardware type
-	uint16_t ptype;		// protocol type
-	uint8_t hlen;		// hardware address length
-	uint8_t plen;		// protocol address length
-	uint16_t oper;		// operation
-	uint8_t sha[6];		// sender hardware address
-	uint8_t spa[4];		// sender protocol address
-	uint8_t tha[6];		// target hardware address
-	uint8_t tpa[4];		// target protocol address
+	uint16_t htype;					// hardware type
+	uint16_t ptype;					// protocol type (see ethernet's ethertype)
+	uint8_t hlen;					// hardware address length
+	uint8_t plen;					// protocol address length
+	uint16_t oper;					// operation
+	// TODO: generalize this to arbitrary HTYPEs and PTYPEs
+	uint8_t sha[HLEN_ETHERNET];		// sender hardware address
+	uint8_t spa[PLEN_IP4];			// sender protocol address
+	uint8_t tha[HLEN_ETHERNET];		// target hardware address
+	uint8_t tpa[PLEN_IP4];			// target protocol address
 } __attribute__((packed)) arp_pkt_t;
 
 void arp_rx(arp_pkt_t* arp);
+void arp_tx(arp_pkt_t* arp);
+ether_addr_t arp_resolve(ip_addr_t ip);
+void arp_flush();
+
+void arp_print_info();
 
 #endif
