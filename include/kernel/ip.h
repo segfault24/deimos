@@ -18,13 +18,15 @@
 #ifndef KERNEL_IP_H
 #define KERNEL_IP_H
 
-#include <stddef.h>
 #include <stdint.h>
-#include <kernel/net.h>
 
 #define PROTOCOL_ICMP 0x01
 #define PROTOCOL_TCP  0x06
 #define PROTOCOL_UDP  0x11
+
+typedef struct _ip_addr_t {
+	uint8_t octet[4];
+} __attribute__((packed)) ip_addr_t;
 
 typedef struct _ip_pkt_t {
 	uint8_t version_ihl;

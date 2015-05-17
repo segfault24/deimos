@@ -16,8 +16,6 @@
  */
 
 #include <kernel/stdio.h>
-#include <kernel/string.h>
-#include <kernel/net.h>
 #include <kernel/ip.h>
 
 void ip_rx(ip_pkt_t* ip)

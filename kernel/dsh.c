@@ -25,6 +25,7 @@
 #include <kernel/kalloc.h>
 #include <kernel/pci.h>
 #include <kernel/disk.h>
+#include <kernel/arp.h>
 #include <kernel/power.h>
 
 #include <i386/isr.h>
@@ -60,7 +61,7 @@ void dsh_loop()
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
 		{
-			printf("clear | lspci | lsmem | lsheap | lsint | lsdisk\n");
+			printf("clear | lspci | lsmem | lsheap | lsint | lsdisk | lsarp\n");
 			printf("rtlstart | rtlstop | atastart | atastop | reboot\n");
 		}
 		else if(!strcmp(buf, "clear")) tty_clear();
@@ -69,6 +70,9 @@ void dsh_loop()
 		else if(!strcmp(buf, "lsheap")) heap_print_info();
 		else if(!strcmp(buf, "lsint")) interrupts_print_info();
 		else if(!strcmp(buf, "lsdisk")) disk_print_info();
+		//else if(!strcmp(buf, "lsnet")) net_print_info();
+		//else if(!strcmp(buf, "lsip")) ip_print_info();
+		else if(!strcmp(buf, "lsarp")) arp_print_info();
 		else if(!strcmp(buf, "rtlstart")) rtl_module_init();
 		else if(!strcmp(buf, "rtlstop")) rtl_module_kill();
 		else if(!strcmp(buf, "atastart")) ata_module_init();

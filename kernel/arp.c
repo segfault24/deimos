@@ -18,9 +18,9 @@
 #include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/endian.h>
-#include <kernel/net.h>
-#include <kernel/arp.h>
+#include <kernel/ether.h>
 #include <kernel/ip.h>
+#include <kernel/arp.h>
 
 void arp_rx(arp_pkt_t* arp)
 {
@@ -49,4 +49,39 @@ void arp_rx(arp_pkt_t* arp)
 		arp->tha[0], arp->tha[1], arp->tha[2], arp->tha[3], arp->tha[4], arp->tha[5],
 		arp->tpa[0], arp->tpa[1], arp->tpa[2], arp->tpa[3]
 	);
+	
+	// TODO: add or update entry to ARP cache (we'll need threading & interrupt protection)
+	// TODO: ARP probes?
+}
+
+void arp_tx(arp_pkt_t* arp)
+{
+	// TODO: transmit ARP request
+	arp++; // dummy
+}
+
+ether_addr_t arp_resolve(ip_addr_t ip)
+{
+	ether_addr_t ether;
+	
+	ip.octet[0]++; // dummy
+	
+	// TODO: search our ARP cache
+	// if we have no entry
+	//   send an ARP request
+	//   arp_tx();
+	//   return the broadcast address
+	     memset(&ether, 0xFF, 6);
+	
+	return ether;
+}
+
+void arp_flush()
+{
+	// TODO: empty the cache
+}
+
+void arp_print_info()
+{
+	printf("arpinfo\n");
 }
