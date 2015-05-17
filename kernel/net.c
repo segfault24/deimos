@@ -15,12 +15,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stddef.h>
 #include <kernel/stdio.h>
 #include <kernel/string.h>
-#include <kernel/endian.h>
 #include <kernel/kalloc.h>
-#include <kernel/ip.h>
-#include <kernel/arp.h>
+#include <kernel/ether.h>
 #include <kernel/net.h>
 
 static net_dev_t* net_dev_list = 0;
@@ -31,6 +30,17 @@ void net_init()
 
 int register_net_dev(net_dev_t* dev)
 {
+	if(!dev)
+		return 1;
+	
+	switch(dev->type)
+	{
+		case NETDEV_ETHERNET:
+			break; // continue
+		default:
+			return 1; // bad device type or unsupported link protocol
+	}
+	
 	dev->next = 0;
 	if(!net_dev_list)
 	{
@@ -47,7 +57,7 @@ int register_net_dev(net_dev_t* dev)
 
 int remove_net_dev(net_dev_t* dev)
 {
-	if(!net_dev_list)
+	if(!dev || !net_dev_list)
 		return 1;
 	
 	if(dev == net_dev_list)
@@ -89,22 +99,18 @@ void net_cpy_pkt(void* src, pkt_buf_t* dest, size_t size)
 
 void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt)
 {
-	dev++; // dummy
 	//printf("received packet from dev:%x len:%x\n", dev, pkt->len);
 	
-	// apply ethernet header
-	ether_pkt_t* e = (ether_pkt_t*) pkt->data;
-	// check ethertype
-	switch(ENDIANSWAP16(e->ethertype))
+	// TODO: check for valid dev and pkt
+	// TODO: this should really only queue the packet for another thread to process
+	
+	// send to proper protocol layer
+	switch(dev->type)
 	{
-		case ETHERTYPE_ARP:
-			arp_rx((arp_pkt_t*) &(e->payload));
-			break;
-		case ETHERTYPE_IP4:
-			ip_rx((ip_pkt_t*) &(e->payload));
+		case NETDEV_ETHERNET:
+			ether_rx((ether_pkt_t*) pkt->data);
 			break;
 		default:
-			//printf("unsupported ethertype: 0x%x\n", ENDIANSWAP16(e->ethertype));
 			break;
 	}
 	
