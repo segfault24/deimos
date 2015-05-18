@@ -30,16 +30,16 @@
 #define OPER_REPLY 2
 
 typedef struct _arp_pkt_t {
-	uint16_t htype;					// hardware type
-	uint16_t ptype;					// protocol type (see ethernet's ethertype)
-	uint8_t hlen;					// hardware address length
-	uint8_t plen;					// protocol address length
-	uint16_t oper;					// operation
+	uint16_t htype;			// hardware type
+	uint16_t ptype;			// protocol type (see ethernet's ethertype)
+	uint8_t hlen;			// hardware address length
+	uint8_t plen;			// protocol address length
+	uint16_t oper;			// operation
 	// TODO: generalize this to arbitrary HTYPEs and PTYPEs
-	uint8_t sha[HLEN_ETHERNET];		// sender hardware address
-	uint8_t spa[PLEN_IP4];			// sender protocol address
-	uint8_t tha[HLEN_ETHERNET];		// target hardware address
-	uint8_t tpa[PLEN_IP4];			// target protocol address
+	ether_addr_t sha;		// sender hardware address
+	ip_addr_t spa;			// sender protocol address
+	ether_addr_t tha;		// target hardware address
+	ip_addr_t tpa;			// target protocol address
 } __attribute__((packed)) arp_pkt_t;
 
 void arp_rx(arp_pkt_t* arp);
