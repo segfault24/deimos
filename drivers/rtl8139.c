@@ -141,7 +141,7 @@ static void rtl_isr_handler()
 				else
 				{
 					// the alloc failed, drop the packet
-					kwarn("dropped a packet");
+					kwarn("rtl8139: dropped a packet");
 				}
 			}
 			

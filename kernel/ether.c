@@ -21,6 +21,8 @@
 #include <kernel/arp.h>
 #include <kernel/ether.h>
 
+static ether_addr_t our_ether;
+
 void ether_rx(ether_pkt_t* ether)
 {
 	// check ethertype
@@ -36,4 +38,38 @@ void ether_rx(ether_pkt_t* ether)
 			//printf("unsupported ethertype: 0x%x\n", ENDIANSWAP16(ether->ethertype));
 			break;
 	}
+}
+
+ether_addr_t ether_get_local()
+{
+	our_ether.octet[0] = 0x01;
+	our_ether.octet[1] = 0x23;
+	our_ether.octet[2] = 0x45;
+	our_ether.octet[3] = 0x67;
+	our_ether.octet[4] = 0x89;
+	our_ether.octet[5] = 0xAB;
+	return our_ether;
+}
+
+ether_addr_t ether_get_broadcast()
+{
+	ether_addr_t b;
+	b.octet[0] = 0xFF;
+	b.octet[1] = 0xFF;
+	b.octet[2] = 0xFF;
+	b.octet[3] = 0xFF;
+	b.octet[4] = 0xFF;
+	b.octet[5] = 0xFF;
+	return b;
+}
+
+int ether_cmp(ether_addr_t a, ether_addr_t b)
+{
+	return
+		a.octet[0] == b.octet[0] &&
+		a.octet[1] == b.octet[1] &&
+		a.octet[2] == b.octet[2] &&
+		a.octet[3] == b.octet[3] &&
+		a.octet[4] == b.octet[4] &&
+		a.octet[5] == b.octet[5];
 }

@@ -37,11 +37,13 @@ typedef struct _ip_pkt_t {
 	uint8_t ttl;
 	uint8_t protocol;
 	uint16_t checksum;
-	uint8_t source[4];
-	uint8_t destination[4];
+	ip_addr_t source;
+	ip_addr_t destination;
 	uint8_t* payload;
 } __attribute__((packed)) ip_pkt_t;
 
 void ip_rx(ip_pkt_t* ip);
+ip_addr_t ip_get_local();
+int ip_cmp(ip_addr_t a, ip_addr_t b);
 
 #endif

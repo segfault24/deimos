@@ -18,10 +18,34 @@
 #include <kernel/stdio.h>
 #include <kernel/ip.h>
 
+static ip_addr_t our_ip;
+
 void ip_rx(ip_pkt_t* ip)
 {
-	printf("ip pro=%u src=%u.%u.%u.%u dst=%u.%u.%u.%u\n",
-		ip->protocol, ip->source[0], ip->source[1], ip->source[2], ip->source[3],
-		ip->destination[0], ip->destination[1], ip->destination[2], ip->destination[3]
-	);
+	ip++; // dummy
+	/*printf("ip pro=%u src=%u.%u.%u.%u dst=%u.%u.%u.%u\n",
+		ip->protocol,
+		ip->source.octet[0], ip->source.octet[1],
+		ip->source.octet[2], ip->source.octet[3],
+		ip->destination.octet[0], ip->destination.octet[1],
+		ip->destination.octet[2], ip->destination.octet[3]
+	);*/
+}
+
+ip_addr_t ip_get_local()
+{
+	our_ip.octet[0] = 12;
+	our_ip.octet[1] = 34;
+	our_ip.octet[2] = 56;
+	our_ip.octet[3] = 78;
+	return our_ip;
+}
+
+int ip_cmp(ip_addr_t a, ip_addr_t b)
+{
+	return
+		a.octet[0] == b.octet[0] &&
+		a.octet[1] == b.octet[1] &&
+		a.octet[2] == b.octet[2] &&
+		a.octet[3] == b.octet[3];
 }

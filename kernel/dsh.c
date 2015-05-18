@@ -61,25 +61,26 @@ void dsh_loop()
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
 		{
-			printf("clear | lspci | lsmem | lsheap | lsint | lsdisk | lsarp\n");
-			printf("rtlstart | rtlstop | atastart | atastop | reboot\n");
+			printf("clear | reboot | pci | mem | heap | int | disk\n");
+			printf("rtl <start|stop> | ata <start|stop> | arp <flush>\n");
 		}
 		else if(!strcmp(buf, "clear")) tty_clear();
-		else if(!strcmp(buf, "lspci")) pci_print_info();
-		else if(!strcmp(buf, "lsmem")) memory_print_info();
-		else if(!strcmp(buf, "lsheap")) heap_print_info();
-		else if(!strcmp(buf, "lsint")) interrupts_print_info();
-		else if(!strcmp(buf, "lsdisk")) disk_print_info();
-		//else if(!strcmp(buf, "lsnet")) net_print_info();
-		//else if(!strcmp(buf, "lsip")) ip_print_info();
-		else if(!strcmp(buf, "lsarp")) arp_print_info();
-		else if(!strcmp(buf, "rtlstart")) rtl_module_init();
-		else if(!strcmp(buf, "rtlstop")) rtl_module_kill();
-		else if(!strcmp(buf, "atastart")) ata_module_init();
-		else if(!strcmp(buf, "atastop")) ata_module_kill();
 		else if(!strcmp(buf, "reboot")) reboot();
+		else if(!strcmp(buf, "pci")) pci_print_info();
+		else if(!strcmp(buf, "mem")) memory_print_info();
+		else if(!strcmp(buf, "heap")) heap_print_info();
+		else if(!strcmp(buf, "int")) interrupts_print_info();
+		else if(!strcmp(buf, "disk")) disk_print_info();
+		//else if(!strcmp(buf, "net")) net_print_info();
+		//else if(!strcmp(buf, "ip")) ip_print_info();
+		else if(!strcmp(buf, "arp")) arp_print_info();
+		else if(!strcmp(buf, "arp flush")) arp_flush();
+		else if(!strcmp(buf, "rtl start")) rtl_module_init();
+		else if(!strcmp(buf, "rtl stop")) rtl_module_kill();
+		else if(!strcmp(buf, "ata start")) ata_module_init();
+		else if(!strcmp(buf, "ata stop")) ata_module_kill();
 		else if(!strcmp(buf, ""));
-		else printf("invalid command\n");
+		else printf("invalid command \"%s\"\n", buf);
 	}
 	kfree(buf);
 }
