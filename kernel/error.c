@@ -39,6 +39,6 @@ void kpanic(const char* message)
 	printf("Panic: the kernel encountered an unrecoverable error\n");
 	printf("Panic: >> %s\n", message);
 	printf("Panic: system will now halt...");
-
+	
 	for(;;);
 }

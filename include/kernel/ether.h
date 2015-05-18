@@ -35,5 +35,8 @@ typedef struct _ether_pkt_t {
 } __attribute__((packed)) ether_pkt_t;
 
 void ether_rx(ether_pkt_t* ether);
+ether_addr_t ether_get_local();
+ether_addr_t ether_get_broadcast();
+int ether_cmp(ether_addr_t a, ether_addr_t b);
 
 #endif

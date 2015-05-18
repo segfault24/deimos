@@ -111,6 +111,7 @@ void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt)
 			ether_rx((ether_pkt_t*) pkt->data);
 			break;
 		default:
+			printf("net: not an ethernet packet");
 			break;
 	}
 	
