@@ -18,12 +18,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <i386/paging.h>
 #include <kernel/stdio.h>
 #include <kernel/error.h>
 #include <kernel/string.h>
 #include <kernel/kalloc.h>
 
+#define HEAP_MAGIC 0xDEADBEEF
+
 typedef struct _header_t {
+	unsigned int magic;
 	size_t size;
 	int allocated;
 	struct _header_t* prev;
@@ -51,6 +55,8 @@ static void* kmalloc_int(size_t size, int align)
 	header_t* h;
 	header_t* new_h;
 	
+	heap_sanity_check(); // debug, remove this
+	
 	if(size == 0)
 		return 0;
 	
@@ -60,6 +66,9 @@ static void* kmalloc_int(size_t size, int align)
 	h = kheap;
 	while(h != 0)
 	{
+		if(h->magic != HEAP_MAGIC)
+			kpanic("kmalloc: heap magic violated");
+		
 		// find a big enough free block
 		if((h->allocated == 0) && (h->size >= size + sizeof(header_t)))
 		{
@@ -77,6 +86,7 @@ static void* kmalloc_int(size_t size, int align)
 				new_h = (void*)aligned_addr - sizeof(header_t);
 				new_h->size = (uint32_t)h + h->size - aligned_addr;
 				new_h->allocated = 1;
+				new_h->magic = HEAP_MAGIC;
 				// update the old block
 				h->size = aligned_addr - (uint32_t)h;
 				// insert the new block
@@ -92,6 +102,7 @@ static void* kmalloc_int(size_t size, int align)
 					header_t* back_h = new_h + size + sizeof(header_t);
 					back_h->size = new_h->size - (size + sizeof(header_t));
 					back_h->allocated = 0;
+					back_h->magic = HEAP_MAGIC;
 					
 					new_h->size = size + sizeof(header_t);
 					
@@ -120,6 +131,7 @@ static void* kmalloc_int(size_t size, int align)
 					new_h = (void*)h + size + sizeof(header_t);
 					new_h->size = h->size - (size + sizeof(header_t));
 					new_h->allocated = 0;
+					new_h->magic = HEAP_MAGIC;
 					
 					h->size = sizeof(header_t) + size;
 					h->allocated = 1;
@@ -131,6 +143,7 @@ static void* kmalloc_int(size_t size, int align)
 					h->next = new_h;
 					new_h->prev = h;
 				}
+				
 				return (void*)h + sizeof(header_t);
 			}
 		}
@@ -147,8 +160,20 @@ void kheap_init(void* start, size_t size)
 	kheap = (header_t*)start;
 	kheap->size = size;
 	kheap->allocated = 0;
+	kheap->magic = HEAP_MAGIC;
 	kheap->next = 0;
 	kheap->prev = 0;
+}
+
+void heap_sanity_check()
+{
+	header_t* h = kheap;
+	while(h)
+	{
+		if(h->magic != HEAP_MAGIC)
+			kpanic("kheap: heap magic violated");
+		h = h->next;
+	}
 }
 
 void heap_print_info()
@@ -159,6 +184,7 @@ void heap_print_info()
 	header_t* h = kheap;
 	while(h)
 	{
+		printf("%x-%x-%x %x %x %x, ", h->prev, h, h->next, h->magic, h->allocated, h->size); // for debugging
 		if(h->allocated)
 			used += h->size;
 		else
@@ -169,25 +195,19 @@ void heap_print_info()
 	printf("\ttotal: %d KiB\n", (free + used)/1024);
 	printf("\t free: %d KiB\n", free/1024);
 	printf("\t used: %d KiB\n", used/1024);
-	
-	/** used for heap debugging
-	header_t* h = kheap;
-	while(h)
-	{
-		printf("%x-%x-%x %x %x\n", h->prev, h, h->next, h->allocated, h->size);
-		h = h->next;
-	}
-	printf("\n");*/
 }
 
 void kfree(void* ptr)
 {
 	header_t* h;
 	
+	heap_sanity_check(); // debug, remove this
 	if(!ptr)
 		return;
 	
 	h = (header_t*)(ptr - sizeof(header_t));
+	if(h->magic != HEAP_MAGIC)
+		kpanic("kfree: heap magic violated");
 	h->allocated = 0;
 	
 	// merge with next block if it's free
