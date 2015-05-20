@@ -91,6 +91,11 @@ pkt_buf_t* net_alloc_pkt_buf(size_t size)
 	return p;
 }
 
+void net_free_pkt_buf(pkt_buf_t* buf)
+{
+	kfree(buf);
+}
+
 void net_cpy_pkt(void* src, pkt_buf_t* dest, size_t size)
 {
 	memcpy(dest->data, src, size);
@@ -100,20 +105,21 @@ void net_cpy_pkt(void* src, pkt_buf_t* dest, size_t size)
 void net_rx_pkt(net_dev_t* dev, pkt_buf_t* pkt)
 {
 	//printf("received packet from dev:%x len:%x\n", dev, pkt->len);
+	putchar('.');dev++; // debug, remove this
 	
 	// TODO: check for valid dev and pkt
 	// TODO: this should really only queue the packet for another thread to process
 	
 	// send to proper protocol layer
-	switch(dev->type)
-	{
-		case NETDEV_ETHERNET:
-			ether_rx((ether_pkt_t*) pkt->data);
-			break;
-		default:
-			printf("net: not an ethernet packet");
-			break;
-	}
+	// switch(dev->type)
+	// {
+		// case NETDEV_ETHERNET:
+			// ether_rx((ether_pkt_t*) pkt->data);
+			// break;
+		// default:
+			// printf("net: not an ethernet packet");
+			// break;
+	// }
 	
-	kfree(pkt);
+	net_free_pkt_buf(pkt);
 }
