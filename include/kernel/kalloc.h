@@ -23,6 +23,7 @@
 
 void kheap_init(void* start, size_t size);
 void heap_print_info();
+void heap_sanity_check();
 
 void* kmalloc(size_t size);
 void* kmalloc_a(size_t size);
