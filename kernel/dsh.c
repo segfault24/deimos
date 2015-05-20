@@ -71,14 +71,17 @@ void dsh_loop()
 		else if(!strcmp(buf, "heap")) heap_print_info();
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
+		
 		//else if(!strcmp(buf, "net")) net_print_info();
 		//else if(!strcmp(buf, "ip")) ip_print_info();
 		else if(!strcmp(buf, "arp")) arp_print_info();
 		else if(!strcmp(buf, "arp flush")) arp_flush();
+		
 		else if(!strcmp(buf, "rtl start")) rtl_module_init();
 		else if(!strcmp(buf, "rtl stop")) rtl_module_kill();
 		else if(!strcmp(buf, "ata start")) ata_module_init();
 		else if(!strcmp(buf, "ata stop")) ata_module_kill();
+		
 		else if(!strcmp(buf, ""));
 		else printf("invalid command \"%s\"\n", buf);
 	}
