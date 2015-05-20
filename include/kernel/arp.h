@@ -44,7 +44,7 @@ typedef struct _arp_pkt_t {
 
 void arp_rx(arp_pkt_t* arp);
 void arp_tx(arp_pkt_t* arp);
-ether_addr_t arp_resolve(ip_addr_t ip);
+int arp_resolve(ip_addr_t ip, ether_addr_t* ether);
 void arp_flush();
 
 void arp_print_info();

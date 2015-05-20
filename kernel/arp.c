@@ -48,11 +48,14 @@ static arp_cache_entry_t* arp_cache_search(ip_addr_t ip)
 void arp_rx(arp_pkt_t* arp)
 {
 	// TODO: ARP probes?
+	// TODO: need threading & interrupt protection
+	// TODO: how long do we keep entries? need timer functions for this
 	
 	// validate arp packet, return if it doesnt match what we support
 	if(ENDIANSWAP16(arp->htype) != HTYPE_ETHERNET ||
 		ENDIANSWAP16(arp->ptype) != PTYPE_IP4 ||
-		arp->hlen != HLEN_ETHERNET || arp->plen != PLEN_IP4 ||
+		arp->hlen != HLEN_ETHERNET ||
+		arp->plen != PLEN_IP4 ||
 		(ENDIANSWAP16(arp->oper) != OPER_REQUEST &&
 		ENDIANSWAP16(arp->oper) != OPER_REPLY)) return;
 	
@@ -66,91 +69,87 @@ void arp_rx(arp_pkt_t* arp)
 		arp->tpa.octet[0], arp->tpa.octet[1], arp->tpa.octet[2], arp->tpa.octet[3]
 	);
 	
-	if(ENDIANSWAP16(arp->oper) == OPER_REQUEST)
+	// we take note of all packets regardless of whether they were for us
+	arp_cache_entry_t* e = arp_cache_search(arp->spa);
+	if(e)
 	{
-		// is it for us? send a reply if it is
-		// TODO: we can also snoop the src MAC/IPs of requests that arent for us
-		if(ip_cmp(arp->tpa, ip_get_local()))
-		{
-			printf("arp sending reply\n");
-			arp_pkt_t reply;
-			reply.htype = ENDIANSWAP16(HTYPE_ETHERNET);
-			reply.ptype = ENDIANSWAP16(PTYPE_IP4);
-			reply.hlen = HLEN_ETHERNET;
-			reply.plen = PLEN_IP4;
-			reply.oper = ENDIANSWAP16(OPER_REPLY);
-			reply.sha = ether_get_local();
-			reply.spa = ip_get_local();
-			reply.tha = arp->sha;
-			reply.tpa = arp->spa;
-			arp_tx(&reply);
-		}
+		printf("arp cache update\n");
+		// update existing entry
+		e->ether = arp->sha;
 	}
-	else if(ENDIANSWAP16(arp->oper) == OPER_REPLY)
+	else
 	{
-		// TODO: need threading & interrupt protection
-		// TODO: how long do we keep entries? need timer functions for this
-		
-		// note that we accept all replies, regardless of whether they were for us
-		arp_cache_entry_t* e = arp_cache_search(arp->spa);
-		if(e)
-		{
-			printf("arp cache update\n");
-			// entry already exists, update it
-			e->ether = arp->sha;
-		}
-		else
-		{
-			printf("arp cache new\n");
-			////////////// THIS SECTION FUCKS UP THE HEAP SOMEHOW ////////////////
-			// create new entry
-			/*e = kmalloc(sizeof(arp_cache_entry_t));
-			if(!e)
-			{
-				// no memory, dont add entry
-				kwarn("arp: could not allocate memory for ARP cache entry");
-				return;
-			}
-			e->ip = arp->spa;
-			e->ether = arp->sha;
-			e->next = arp_cache;
-			arp_cache = e; // add it to the head (because that's easiest)*/
-		}
+		printf("arp cache new\n");
+		////////////// THIS SECTION FUCKS UP THE HEAP SOMEHOW ////////////////
+		// create new entry
+		// e = kmalloc(sizeof(arp_cache_entry_t));
+		// if(!e)
+		// {
+			// no memory, dont add entry
+			// kwarn("arp: could not allocate memory for ARP cache entry");
+			// return;
+		// }
+		// e->ip = arp->spa;
+		// e->ether = arp->sha;
+		// e->next = arp_cache;
+		// arp_cache = e; // add it to the head (because that's easiest)
+		//////////////////////////////////////////////////////////////////////
+	}
+	
+	// if we're the target protocol address and it's a request, we need to send a reply
+	if(ip_cmp(arp->tpa, ip_get_local()) && ENDIANSWAP16(arp->oper) == OPER_REQUEST)
+	{
+		printf("arp sending reply\n");
+		// send a reply to the request
+		// arp_pkt_t reply;
+		// reply.htype = ENDIANSWAP16(HTYPE_ETHERNET);
+		// reply.ptype = ENDIANSWAP16(PTYPE_IP4);
+		// reply.hlen = HLEN_ETHERNET;
+		// reply.plen = PLEN_IP4;
+		// reply.oper = ENDIANSWAP16(OPER_REPLY);
+		// reply.sha = ether_get_local();
+		// reply.spa = ip_get_local();
+		// reply.tha = arp->sha;
+		// reply.tpa = arp->spa;
+		// arp_tx(&reply);
 	}
 }
 
 void arp_tx(arp_pkt_t* arp)
 {
-	printf("arp tx\n");
 	// TODO: transmit
+	
+	printf("arp tx\n");
 	arp++; // dummy
 }
 
-ether_addr_t arp_resolve(ip_addr_t ip)
+int arp_resolve(ip_addr_t ip, ether_addr_t* ether)
 {
 	printf("arp resolve\n");
-	arp_cache_entry_t* e;
-	e = arp_cache_search(ip);
+	// search our cache
+	arp_cache_entry_t* e = arp_cache_search(ip);
 	if(e != 0)
-		return e->ether;
+	{
+		// hit! set the caller's variable and return success
+		*(ether) = e->ether;
+		return 0;
+	}
 	
 	printf("arp sending request\n");
-	// didn't find an entry
-	// craft and send an ARP request
-	arp_pkt_t arp;
-	arp.htype = ENDIANSWAP16(HTYPE_ETHERNET);
-	arp.ptype = ENDIANSWAP16(PTYPE_IP4);
-	arp.hlen = HLEN_ETHERNET;
-	arp.plen = PLEN_IP4;
-	arp.oper = ENDIANSWAP16(OPER_REQUEST);
-	arp.sha = ether_get_local(); // our MAC
-	arp.spa = ip_get_local(); // our IP
-	arp.tha = ether_get_broadcast(); // broadcast MAC
-	arp.tpa = ip; // target IP
-	arp_tx(&arp);
-	
-	// return the broadcast address for now
-	return ether_get_broadcast();
+	// didn't find an entry, so craft and send an ARP request,
+	// and tell the caller we failed
+	// arp_pkt_t arp;
+	// arp.htype = ENDIANSWAP16(HTYPE_ETHERNET);
+	// arp.ptype = ENDIANSWAP16(PTYPE_IP4);
+	// arp.hlen = HLEN_ETHERNET;
+	// arp.plen = PLEN_IP4;
+	// arp.oper = ENDIANSWAP16(OPER_REQUEST);
+	// arp.sha = ether_get_local(); // our MAC
+	// arp.spa = ip_get_local(); // our IP
+	// arp.tha = ether_get_broadcast(); // broadcast MAC
+	// arp.tpa = ip; // target IP
+	// arp_tx(&arp);
+	return 1;
 }
 
 void arp_flush()
@@ -172,10 +171,12 @@ void arp_print_info()
 	arp_cache_entry_t* e = arp_cache;
 	while(e)
 	{
-		printf("  %x:%x:%x:%x:%x:%x  %u.%u.%u.%u\n",
+		printf("  %x  %x:%x:%x:%x:%x:%x  %u.%u.%u.%u  %x\n",
+			e,
 			e->ether.octet[0], e->ether.octet[1], e->ether.octet[2],
 			e->ether.octet[3], e->ether.octet[4], e->ether.octet[5],
-			e->ip.octet[0], e->ip.octet[1], e->ip.octet[2], e->ip.octet[3]
+			e->ip.octet[0], e->ip.octet[1], e->ip.octet[2], e->ip.octet[3],
+			e->next
 		);
 		e = e->next;
 	}
