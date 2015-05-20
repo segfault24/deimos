@@ -26,11 +26,8 @@ typedef struct _regs_t {
     unsigned int eip, cs, eflags; // cpu automatically pushes these
 } regs_t;
 
-// Registered ISRs should be in the form "void fname(uint32_t error)".
+// Registered ISRs should be in the form "void fname(regs_t* regs)".
 // These ISRs should be made as short as possible.
-// Error numbers have no meaning for IRQs, and can be discarded.
-/*void register_isr(uint8_t interrupt, void (*func_ptr));
-void clear_isr(uint8_t interrupt);*/
 
 int request_isr(unsigned int interrupt, unsigned int id, void(*handler));
 int request_irq(unsigned int irq, unsigned int id, void(*handler));

@@ -137,8 +137,10 @@ int request_isr(unsigned int interrupt, unsigned int id, void(*handler))
 
 int request_irq(unsigned int irq, unsigned int id, void(*handler))
 {
-	pic_unmask_irq(irq);
-	return request_isr(irq + 32, id, handler);
+	int ret = request_isr(irq + 32, id, handler);
+	if(!ret)
+		pic_unmask_irq(irq);
+	return ret;
 }
 
 void release_isr(unsigned int interrupt, unsigned int id)
@@ -180,6 +182,8 @@ void release_isr(unsigned int interrupt, unsigned int id)
 void release_irq(unsigned int irq, unsigned int id)
 {
 	release_isr(irq + 32, id);
+	if(handlers[irq+32].handler == 0)
+		pic_mask_irq(irq);
 }
 
 void enable_interrupts(){__asm__ volatile ( "sti;nop;" );}
