@@ -20,93 +20,125 @@
 #include <kernel/error.h>
 #include <i386/paging.h>
 #include <kernel/kalloc.h>
-#include <kernel/process.h>
+#include <kernel/task.h>
 #include <kernel/sched.h>
 
 extern unsigned int read_eip();
+extern page_directory_t* current_pd;
 
-static process_t* cur_proc = 0;
+task_t* idle_ktask;
+task_t* cur_task = 0;
+int scheduling_enabled = 0;
 
 static void switch_task()
 {
-	int esp;//, ebp;//, eip;
+	int esp, ebp, eip;
 	
-	if(!cur_proc)
+	if(!cur_task)
 		return;
+	
+	disable_interrupts();
 	
 	// snapshot the current task's registers
 	__asm__ volatile ( "mov %%esp, %0" : "=r" (esp) );
-	//__asm__ volatile ( "mov %%ebp, %0" : "=r" (ebp) );
+	__asm__ volatile ( "mov %%ebp, %0" : "=r" (ebp) );
 	
-	//eip = read_eip();
-	//if(eip == 0x12345)
-	//	return;
+	eip = read_eip();
+	if(eip == 0x12345)
+		return;
 	
 	// save the current task's registers
-	//cur_proc->eip = eip;
-	cur_proc->esp = esp;
-	//cur_proc->ebp = ebp;
+	cur_task->eip = eip;
+	cur_task->esp = esp;
+	cur_task->ebp = ebp;
 	
-	// the next process becomes the current
-	cur_proc = cur_proc->next_proc;
+	// the next task becomes the current
+	cur_task = cur_task->next_task;
 	
 	// load the next task's registers
-	//eip = cur_proc->eip;
-	esp = cur_proc->esp;
-	//ebp = cur_proc->ebp;
+	eip = cur_task->eip;
+	esp = cur_task->esp;
+	ebp = cur_task->ebp;
 	
 	// load the next process' page directory
-	switch_directory(cur_proc->page_dir);
+	current_pd = cur_task->page_dir;
+	//switch_kernel_stack();
 	
-	/*__asm__ volatile ( "		\
+	putchar('s');
+	// do the actual switch
+	__asm__ volatile ( "		\
 		mov %0, %%ecx;			\
 		mov %1, %%esp;			\
 		mov %2, %%ebp;			\
+		mov %3, %%cr3;			\
 		mov $0x12345, %%eax;	\
-		jmp *%%ecx				\
-		" : : "r" (eip), "r" (esp), "r" (ebp));*/
+		sti;					\
+		nop;					\
+		jmp *%%ecx"
+		: : "r" (eip), "r" (esp), "r" (ebp),
+		"r" (current_pd->phys));
 	
-	__asm__ volatile ( "mov %0, %%esp" : : "r" (esp) );
-	//__asm__ volatile ( "mov %0, %%ebp" : : "r" (ebp) );
+	// control shouldn't reach here
+	kpanic("sched: failed to execute context switch");
+}
+
+static void idle_loop()
+{
+	while(1);
+		//putchar('i');
+}
+
+void queue_task(task_t* t)
+{
+	t->next_task = cur_task->next_task;
+	cur_task->next_task = t;
 }
 
 void sched_init()
 {
-	// setup the first process and queue (to itself)
-	process_t* p = new_process();
-	if(!p)
-		kpanic("could not allocate memory for kernel process struct");
-	p->state = PROCESS_RUNNING;
-	p->page_dir = get_kernel_pd();
-	p->next_proc = p;
+	// setup the first task and manually queue it to itself
+	cur_task = new_task();
+	cur_task->next_task = cur_task;
+	idle_ktask = cur_task;
 	
-	cur_proc = p;
+	// start scheduling
+	scheduling_enabled = 0;
+	
+	// start the idle task
+	create_kernel_task(idle_loop);
 }
 
 void do_scheduling(unsigned int ticks)
 {
 	ticks++;//dummy
-	if(0)
+	if(scheduling_enabled)
 		switch_task();
 }
 
-int kfork()
+task_t* get_idle_ktask()
 {
-	process_t* child;
-	process_t* parent;
+	return idle_ktask;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+/*int kfork()
+{
+	task_t* child;
+	task_t* parent;
 	
 	disable_interrupts();
 	
-	parent = cur_proc;
+	parent = cur_task;
 	
-	// allocate a new process struct
-	child = clone_process(parent);
+	// allocate a new task struct
+	child = clone_task(parent);
 	if(!child)
-		kpanic("kfork: could not allocate memory for child process structures");
+		kpanic("kfork: could not allocate memory for child task structures");
 	
 	// both parent & child will start from here
 	//int eip = read_eip();
-	if(cur_proc == parent)
+	if(cur_task == parent)
 	{
 		// set child's pointers
 		//__asm__ volatile ( "mov %%esp, %0" : "=r" (child->esp));
@@ -114,14 +146,12 @@ int kfork()
 		//child->eip = eip;
 		
 		// insert the new process into the queue
-		child->next_proc = parent->next_proc;
-		parent->next_proc = child;
+		child->next_task = parent->next_task;
+		parent->next_task = child;
 		
 		enable_interrupts();
 		return child->pid;
 	}
-	else
-	{
-		return 0;
-	}
-}
+	
+	return 0;
+}*/

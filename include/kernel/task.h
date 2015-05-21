@@ -15,32 +15,32 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef KERNEL_PROCESS_H
-#define KERNEL_PROCESS_H
+#ifndef KERNEL_TASK_H
+#define KERNEL_TASK_H
 
-#include <i386/isr.h>
 #include <i386/paging.h>
 
-#define PROCESS_RUNNING  0
-#define PROCESS_SLEEPING 1
-#define PROCESS_STOPPED  2
+#define TASK_STOPPED  0
+#define TASK_RUNNING  1
+#define TASK_SLEEPING 2
 
-#define PROCESS_STACK_SIZE 0x4000
+#define KERNEL_STACK_SIZE 0x2000
+#define STACK_SIZE 0x4000
 
-typedef struct _process_t {
-	int pid;
-	int parent_pid;
-	int state;
-	int cpu_time;
-	
+typedef struct _task_t {
+	unsigned int pid, ppid, state, cpu_time;
 	page_directory_t* page_dir;
-	void* stack;
+	unsigned int kernel_stack;
 	unsigned int eip, esp, ebp;
 	
-	struct _process_t* next_proc;
-} process_t;
+	// only for kernel tasks
+	void (*ktask_func)(void);
+	
+	struct _task_t* next_task;
+} task_t;
 
-process_t* new_process();
-process_t* clone_process(process_t* parent);
+task_t* new_task();
+task_t* clone_task(task_t* parent);
+unsigned int create_kernel_task(void (*func)(void));
 
 #endif
