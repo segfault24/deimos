@@ -18,13 +18,12 @@
 #ifndef KERNEL_SCHED_H
 #define KERNEL_SCHED_H
 
-#include <i386/isr.h>
-#include <kernel/process.h>
+#include <kernel/task.h>
 
 void sched_init();
-
 void do_scheduling(unsigned int ticks);
-
-int kfork();
+void queue_task(task_t* t);
+task_t* get_idle_ktask();
+//int kfork();
 
 #endif
