@@ -34,6 +34,7 @@ extern int rtl_module_init();
 extern int rtl_module_kill();
 extern int ata_module_init();
 extern int ata_module_kill();
+extern int scheduling_enabled;
 
 void dsh_loop()
 {
@@ -71,6 +72,8 @@ void dsh_loop()
 		else if(!strcmp(buf, "heap")) heap_print_info();
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
+		
+		else if(!strcmp(buf, "sched")) scheduling_enabled = 1;
 		
 		//else if(!strcmp(buf, "net")) net_print_info();
 		//else if(!strcmp(buf, "ip")) ip_print_info();

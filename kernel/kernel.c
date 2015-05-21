@@ -25,7 +25,7 @@
 #include <kernel/tty.h>
 #include <kernel/arch.h>
 #include <kernel/mm.h>
-#include <kernel/process.h>
+#include <kernel/task.h>
 #include <kernel/sched.h>
 #include <kernel/pci.h>
 #include <kernel/net.h>

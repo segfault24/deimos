@@ -64,8 +64,8 @@ pt_entry* pt_lookup(page_table_t* pt, virt_addr addr)
 
 static page_directory_t __attribute__((aligned (4096))) _kernel_pd;
 
-static page_directory_t* kernel_pd;
-static page_directory_t* current_pd;
+page_directory_t* kernel_pd;
+page_directory_t* current_pd;
 
 void paging_init()
 {
@@ -85,17 +85,12 @@ void paging_init()
 	pde_set_frame(pde, 0);
 	
 	// switch to the new directory
-	switch_directory(kernel_pd);
+	current_pd = kernel_pd;
+	__asm__ volatile ( "movl %0, %%cr3" : :"rm"(kernel_pd->phys) );
 	
 	// register the page fault handler
 	if(request_isr(14, (unsigned int)&kernel_pd, &page_fault_handler))
 		kpanic("could not register page fault handler");
-}
-
-void switch_directory(page_directory_t* pd)
-{
-	current_pd = pd;
-	__asm__ volatile ( "movl %0, %%cr3" : :"rm"(pd->phys) );
 }
 
 phys_addr virt_to_phys(virt_addr v)
