@@ -15,10 +15,11 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <i386/gdt.h>
+#include <stdint.h>
+#include <stddef.h>
 
-// calls the lgdt asm instruction
-extern void gdt_load();
+#include <i386/asm_util.h>
+#include <i386/gdt.h>
 
 gdt_ptr_t gptr;
 static gdt_entry_t gdt[GDT_NUM_ENTRIES];

@@ -18,9 +18,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <i386/asm_util.h>
 #include <i386/ps2.h>
 #include <i386/ps2_kbd.h>
-#include <i386/ioasm.h>
 #include <kernel/tty.h>
 
 /* internal variables and functions */

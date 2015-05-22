@@ -19,7 +19,7 @@
 
 #include <kernel/sched.h>
 #include <kernel/error.h>
-#include <i386/ioasm.h>
+#include <i386/asm_util.h>
 #include <i386/isr.h>
 #include <i386/pit.h>
 
