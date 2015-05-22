@@ -18,6 +18,7 @@
 #include <kernel/stdio.h>
 #include <kernel/string.h>
 #include <kernel/error.h>
+#include <i386/asm_util.h>
 #include <i386/paging.h>
 #include <kernel/kalloc.h>
 #include <kernel/task.h>
@@ -26,7 +27,7 @@
 extern unsigned int read_eip();
 extern page_directory_t* current_pd;
 
-task_t* idle_ktask;
+unsigned int idle_pid = 0;
 task_t* cur_task = 0;
 int scheduling_enabled = 0;
 
@@ -52,8 +53,12 @@ static void switch_task()
 	cur_task->esp = esp;
 	cur_task->ebp = ebp;
 	
+	printf("\nsave: ");task_print_info(cur_task);
+	
 	// the next task becomes the current
 	cur_task = cur_task->next_task;
+	
+	printf("new: ");task_print_info(cur_task);
 	
 	// load the next task's registers
 	eip = cur_task->eip;
@@ -64,7 +69,6 @@ static void switch_task()
 	current_pd = cur_task->page_dir;
 	//switch_kernel_stack();
 	
-	putchar('s');
 	// do the actual switch
 	__asm__ volatile ( "		\
 		mov %0, %%ecx;			\
@@ -84,8 +88,10 @@ static void switch_task()
 
 static void idle_loop()
 {
-	while(1);
-		//putchar('i');
+	unsigned int i = 0;
+	while(1)
+		if(i++%1000000 == 0)
+			putchar('i');
 }
 
 void queue_task(task_t* t)
@@ -99,13 +105,12 @@ void sched_init()
 	// setup the first task and manually queue it to itself
 	cur_task = new_task();
 	cur_task->next_task = cur_task;
-	idle_ktask = cur_task;
+	
+	// start the idle task
+	idle_pid = create_kernel_task(idle_loop);
 	
 	// start scheduling
 	scheduling_enabled = 0;
-	
-	// start the idle task
-	create_kernel_task(idle_loop);
 }
 
 void do_scheduling(unsigned int ticks)
@@ -115,9 +120,21 @@ void do_scheduling(unsigned int ticks)
 		switch_task();
 }
 
-task_t* get_idle_ktask()
+unsigned int get_idle_pid()
 {
-	return idle_ktask;
+	return idle_pid;
+}
+
+void sched_print_info()
+{
+	task_t* t = cur_task;
+	task_print_info(t);
+	t = t->next_task;
+	while(t != cur_task)
+	{
+		task_print_info(t);
+		t = t->next_task;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

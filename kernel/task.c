@@ -60,6 +60,13 @@ static void setup_stack(task_t* t)
 	t->ebp = (unsigned int)esp;
 }
 
+void task_print_info(task_t* t)
+{
+	printf("pid:%u ppid:%u state:%u cpu_time:%u eip:%x esp:%x ebp:%x\n",
+		t->pid, t->ppid, t->state, t->cpu_time, t->eip, t->esp, t->ebp);
+	//printf("  page_dir:%x kernel_stack:%x\n", t->page_dir, t->kernel_stack);
+}
+
 task_t* new_task()
 {
 	// allocate space for the process structures
@@ -83,12 +90,12 @@ task_t* new_task()
 	t->kernel_stack = (unsigned int)kmalloc_a(KERNEL_STACK_SIZE);
 	setup_stack(t);
 	
-	t->next = 0;
+	t->next_task = 0;
 	
 	return t;
 }
 
-task_t* clone_task(task_t* parent)
+/*task_t* clone_task(task_t* parent)
 {
 	task_t* child = new_task();
 	
@@ -104,16 +111,14 @@ task_t* clone_task(task_t* parent)
 	child->page_dir = clone_pd(parent->page_dir);
 	
 	return child;
-}
+}*/
 
 unsigned int create_kernel_task(void (*func)(void))
 {
 	task_t* ktask = new_task();
 
-	ktask->ppid = get_idle_ktask()->pid;
-	ktask->eip = (unsigned int)*func;
-	ktask->state = TASK_RUNNING;
-	ktask->ktask_func = func;
+	ktask->ppid = get_idle_pid();
+	ktask->eip = (unsigned int)func;
 	
 	queue_task(ktask);
 	
