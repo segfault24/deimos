@@ -41,8 +41,8 @@ static void switch_task()
 	disable_interrupts();
 	
 	// snapshot the current task's registers
-	__asm__ volatile ( "mov %%esp, %0" : "=r" (esp) );
-	__asm__ volatile ( "mov %%ebp, %0" : "=r" (ebp) );
+	esp = read_esp();
+	ebp = read_ebp();
 	
 	eip = read_eip();
 	if(eip == 0x12345)
@@ -158,8 +158,8 @@ void sched_print_info()
 	if(cur_task == parent)
 	{
 		// set child's pointers
-		//__asm__ volatile ( "mov %%esp, %0" : "=r" (child->esp));
-		//__asm__ volatile ( "mov %%ebp, %0" : "=r" (child->ebp));
+		//child->esp = read_esp();
+		//child->ebp = read_ebp();
 		//child->eip = eip;
 		
 		// insert the new process into the queue

@@ -41,4 +41,4 @@ idt_load:
 read_eip:
 	pop %eax
 	jmp %eax
-	
+
