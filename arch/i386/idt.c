@@ -18,10 +18,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include <i386/asm_util.h>
 #include <i386/idt.h>
-
-// calls the lidt asm instruction
-extern void idt_load();
 
 idt_ptr_t iptr;
 static idt_entry_t idt[IDT_NUM_ENTRIES];

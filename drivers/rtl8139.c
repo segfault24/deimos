@@ -27,7 +27,7 @@
 #include <kernel/string.h>
 #include <kernel/kalloc.h>
 #include <kernel/error.h>
-#include <i386/ioasm.h>
+#include <i386/asm_util.h>
 #include <i386/isr.h>
 #include <kernel/pci.h>
 #include <kernel/net.h>

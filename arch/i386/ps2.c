@@ -19,7 +19,7 @@
 #include <stdint.h>
 
 #include <kernel/error.h>
-#include <i386/ioasm.h>
+#include <i386/asm_util.h>
 #include <i386/ps2.h>
 
 static void send_cmd(uint8_t cmd)

@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <i386/ioasm.h>
+#include <i386/asm_util.h>
 #include <kernel/power.h>
 
 void reboot()
@@ -25,7 +25,7 @@ void reboot()
 		good = inb(0x64);
 	outb(0x64, 0xFE);
 	while(1)
-		__asm__ volatile ( "hlt" );
+		halt();
 }
 
 void shutdown(){}

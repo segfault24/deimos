@@ -17,6 +17,7 @@
 
 #include <kernel/arch.h>
 
+#include <i386/asm_util.h>
 #include <i386/gdt.h>
 #include <i386/idt.h>
 #include <i386/pic.h>

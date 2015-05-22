@@ -22,6 +22,7 @@
 #include <kernel/string.h>
 #include <kernel/error.h>
 #include <kernel/kalloc.h>
+#include <i386/asm_util.h>
 #include <i386/idt.h>
 #include <i386/pic.h>
 #include <i386/isr.h>
@@ -85,6 +86,12 @@ void isr_handler(regs_t regs)
 		if(pic_is_spurious())
 			return;
 	
+	// if the interrupt was an IRQ, tell the PIC we acknowledge it
+	// this needs to happen *before* calling the handler so that the
+	// timer interrupt can happen again after a context switch
+	if(regs.int_no > 31 && regs.int_no < 48)
+		pic_send_eoi(regs.int_no - 32);
+	
 	int i = 0;
 	handler_ptr_t* h = &handlers[regs.int_no];
 	while(h && h->handler)
@@ -98,10 +105,6 @@ void isr_handler(regs_t regs)
 		dump_regs(&regs);
 		kpanic("uncaught interrupt");
 	}
-	
-	// if the interrupt was an IRQ, tell the PIC we're done
-	if(regs.int_no > 31 && regs.int_no < 48)
-		pic_send_eoi(regs.int_no - 32);
 }
 
 // TODO: request flags, like exclusive or shared 
@@ -186,9 +189,6 @@ void release_irq(unsigned int irq, unsigned int id)
 		pic_mask_irq(irq);
 }
 
-void enable_interrupts(){__asm__ volatile ( "sti;nop;" );}
-void disable_interrupts(){__asm__ volatile ( "cli;nop;" );}
-
 void isr_init()
 {
 	memset(&handlers, 0, 256*sizeof(handler_ptr_t));
@@ -259,9 +259,9 @@ void dump_regs(regs_t* regs)
 	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
 	__asm__ volatile ("movl %%cr3, %0;" :"=rm"(cr3) : );
 	__asm__ volatile ("movl %%cr4, %0;" :"=rm"(cr4) : );
-	printf("INT:%x ERR:%x\n", regs->int_no, regs->err_code);
+	printf("\nINT:%x ERR:%x\n", regs->int_no, regs->err_code);
 	printf("EAX:%x EBX:%x ECX:%x EDX:%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
-	printf("EDI:%x ESI:%x EBP:%x ESP:%x\n", regs->edi, regs->esi, regs->ebp, regs->esp);
-	printf("CS:%x EFLAGS:%x EIP:%x\n", regs->cs, regs->eflags, regs->eip);
-	printf("CR0:%x CR1:00000000 CR2:%x CR3:%x CR4:%x\n\n", cr0, cr2, cr3, cr4);
+	printf("EIP:%x ESP:%x EBP:%x\n", regs->eip, regs->esp, regs->ebp);
+	printf("EDI:%x ESI:%x CS:%x EFLAGS:%x\n", regs->edi, regs->esi, regs->cs, regs->eflags);
+	printf("CR0:%x CR1:0 CR2:%x CR3:%x CR4:%x\n", cr0, cr2, cr3, cr4);
 }
