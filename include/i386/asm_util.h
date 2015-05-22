@@ -75,8 +75,55 @@ static inline void halt()
 	__asm__ volatile ( "hlt" );
 }
 
-extern unsigned int read_eip();
 extern void gdt_load();
 extern void idt_load();
+extern unsigned int read_eip();
+
+#define read_esp() \
+((unsigned int)({\
+	unsigned int esp;\
+	__asm__ volatile ( "mov %%esp, %0" : "=r"(esp) );\
+	esp;\
+}))
+
+#define read_ebp() \
+((unsigned int)({\
+	unsigned int ebp;\
+	__asm__ volatile ( "mov %%ebp, %0" : "=r"(ebp) );\
+	ebp;\
+}))
+
+static inline unsigned int read_cr0()
+{
+	unsigned int cr0;
+	__asm__ volatile ( "movl %%cr0, %0" : "=rm"(cr0) );
+	return cr0;
+}
+
+static inline unsigned int read_cr2()
+{
+	unsigned int cr2;
+	__asm__ volatile ( "movl %%cr2, %0" : "=rm"(cr2) );
+	return cr2;
+}
+
+static inline unsigned int read_cr3()
+{
+	unsigned int cr3;
+	__asm__ volatile ( "movl %%cr3, %0" : "=rm"(cr3) );
+	return cr3;
+}
+
+static inline void write_cr3(unsigned int cr3)
+{
+	__asm__ volatile ( "movl %0, %%cr3" : : "r"((uint32_t)cr3) );
+}
+
+static inline unsigned int read_cr4()
+{
+	unsigned int cr4;
+	__asm__ volatile ( "movl %%cr4, %0" : "=rm"(cr4) );
+	return cr4;
+}
 
 #endif

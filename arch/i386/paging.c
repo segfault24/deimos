@@ -20,6 +20,7 @@
 #include <kernel/stdio.h>
 #include <kernel/error.h>
 #include <kernel/kalloc.h>
+#include <i386/asm_util.h>
 #include <i386/boot.h>
 #include <i386/isr.h>
 #include <i386/paging.h>
@@ -86,7 +87,7 @@ void paging_init()
 	
 	// switch to the new directory
 	current_pd = kernel_pd;
-	__asm__ volatile ( "movl %0, %%cr3" : :"rm"(kernel_pd->phys) );
+	write_cr3(kernel_pd->phys);
 	
 	// register the page fault handler
 	if(request_isr(14, (unsigned int)&kernel_pd, &page_fault_handler))

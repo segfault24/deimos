@@ -255,10 +255,10 @@ void dump_regs(regs_t* regs)
 {
 	uint32_t cr0, cr2, cr3, cr4;
 	
-	__asm__ volatile ("movl %%cr0, %0;" :"=rm"(cr0) : );
-	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
-	__asm__ volatile ("movl %%cr3, %0;" :"=rm"(cr3) : );
-	__asm__ volatile ("movl %%cr4, %0;" :"=rm"(cr4) : );
+	cr0 = read_cr0();
+	cr2 = read_cr2();
+	cr3 = read_cr3();
+	cr4 = read_cr4();
 	printf("\nINT:%x ERR:%x\n", regs->int_no, regs->err_code);
 	printf("EAX:%x EBX:%x ECX:%x EDX:%x\n", regs->eax, regs->ebx, regs->ecx, regs->edx);
 	printf("EIP:%x ESP:%x EBP:%x\n", regs->eip, regs->esp, regs->ebp);

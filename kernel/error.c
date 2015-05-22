@@ -17,6 +17,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <i386/asm_util.h>
 #include <kernel/stdio.h>
 #include <kernel/tty.h>
 #include <kernel/error.h>
@@ -40,6 +41,7 @@ void kpanic(const char* message)
 	printf("Panic: >> %s\n", message);
 	printf("Panic: system will now halt...");
 	
-	__asm__ volatile ("cli"); // TODO: put this in arch dependent file
-	for(;;);
+	disable_interrupts();
+	while(1)
+		halt();
 }
