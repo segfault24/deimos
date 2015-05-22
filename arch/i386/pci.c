@@ -17,7 +17,7 @@
 
 #include <kernel/string.h>
 #include <kernel/stdio.h>
-#include <i386/ioasm.h>
+#include <i386/asm_util.h>
 #include <kernel/kalloc.h>
 #include <kernel/pci.h>
 

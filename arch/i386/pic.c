@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <i386/ioasm.h>
+#include <i386/asm_util.h>
 #include <i386/pic.h>
 
 void pic_init()

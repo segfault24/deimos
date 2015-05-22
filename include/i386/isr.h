@@ -34,9 +34,6 @@ int request_irq(unsigned int irq, unsigned int id, void(*handler));
 void release_isr(unsigned int interrupt, unsigned int id);
 void release_irq(unsigned int irq, unsigned int id);
 
-void enable_interrupts();
-void disable_interrupts();
-
 void dump_regs(regs_t* regs);
 
 void isr_init();
