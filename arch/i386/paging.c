@@ -115,11 +115,6 @@ phys_addr virt_to_phys(virt_addr v)
 
 void page_fault_handler(regs_t* regs)
 {
-	uint32_t cr2;
-	
-	// get the faulty address from CR2
-	__asm__ volatile ("movl %%cr2, %0;" :"=rm"(cr2) : );
-	printf("\npage fault at: %x with error code: %x\n", cr2, regs->err_code);
 	dump_regs(regs);
 	kpanic("page fault");
 }
