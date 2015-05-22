@@ -20,9 +20,11 @@
 
 #include <i386/paging.h>
 
-#define TASK_STOPPED  0
-#define TASK_RUNNING  1
-#define TASK_SLEEPING 2
+#define TASK_STOPPED	0
+#define TASK_READY		1
+#define TASK_RUNNING	2
+#define TASK_SLEEPING	3
+#define TASK_DESTROY	4
 
 #define KERNEL_STACK_SIZE 0x2000
 #define STACK_SIZE 0x4000
@@ -33,14 +35,12 @@ typedef struct _task_t {
 	unsigned int kernel_stack;
 	unsigned int eip, esp, ebp;
 	
-	// only for kernel tasks
-	void (*ktask_func)(void);
-	
 	struct _task_t* next_task;
 } task_t;
 
 task_t* new_task();
-task_t* clone_task(task_t* parent);
+//task_t* clone_task(task_t* parent);
 unsigned int create_kernel_task(void (*func)(void));
+void task_print_info(task_t* t);
 
 #endif

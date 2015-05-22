@@ -23,7 +23,8 @@
 void sched_init();
 void do_scheduling(unsigned int ticks);
 void queue_task(task_t* t);
-task_t* get_idle_ktask();
+unsigned int get_idle_pid();
+void sched_print_info();
 //int kfork();
 
 #endif

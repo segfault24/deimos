@@ -23,6 +23,7 @@
 #include <kernel/tty.h>
 #include <kernel/mm.h>
 #include <kernel/kalloc.h>
+#include <kernel/sched.h>
 #include <kernel/pci.h>
 #include <kernel/disk.h>
 #include <kernel/arp.h>
@@ -73,7 +74,15 @@ void dsh_loop()
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
 		
-		else if(!strcmp(buf, "sched")) scheduling_enabled = 1;
+		else if(!strcmp(buf, "sched")) sched_print_info();
+		else if(!strcmp(buf, "sched start"))
+		{
+			scheduling_enabled = 1;
+			unsigned int k = 0;
+			while(1)
+				if(k++%1000000 == 0)
+					putchar('d');
+		}
 		
 		//else if(!strcmp(buf, "net")) net_print_info();
 		//else if(!strcmp(buf, "ip")) ip_print_info();
@@ -87,6 +96,8 @@ void dsh_loop()
 		
 		else if(!strcmp(buf, ""));
 		else printf("invalid command \"%s\"\n", buf);
+		
+		
 	}
 	kfree(buf);
 }
