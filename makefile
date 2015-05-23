@@ -57,8 +57,8 @@ pxe: kernel
 	chmod -R 777 ~/tftp_dir/*
 
 clean:
-	rm -rf ~/tftp_dir/*
-	rm -f *.o */*.o */*/*.o deimos.bin deimos.iso
+	rm -rfv ~/tftp_dir/*
+	rm -fv *.o */*.o */*/*.o deimos.bin deimos.iso
 
 .PHONY: all kernel iso run clean
 

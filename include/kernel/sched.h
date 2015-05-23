@@ -21,10 +21,11 @@
 #include <kernel/task.h>
 
 void sched_init();
-void do_scheduling(unsigned int ticks);
-void queue_task(task_t* t);
-unsigned int get_idle_pid();
 void sched_print_info();
+void do_scheduling(unsigned int ticks);
+unsigned int create_kernel_task(void (*func)(void));
+void sched_yield();
 //int kfork();
+
 
 #endif

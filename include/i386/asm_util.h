@@ -75,9 +75,19 @@ static inline void halt()
 	__asm__ volatile ( "hlt" );
 }
 
+static inline void memory_barrier()
+{
+	__asm__ volatile ( "" : : : "memory" );
+}
+
+// these functions cannot be gcc inline assembly and are defined elsewhere
+
 extern void gdt_load();
 extern void idt_load();
 extern unsigned int read_eip();
+
+// these functions must be #defined because they cannot alter the stack
+// these utilize gcc's statement expressions extension
 
 #define read_esp() \
 ((unsigned int)({\
