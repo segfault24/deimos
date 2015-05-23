@@ -35,12 +35,12 @@ typedef struct _task_t {
 	unsigned int kernel_stack;
 	unsigned int eip, esp, ebp;
 	
+	struct _task_t* prev_task;
 	struct _task_t* next_task;
 } task_t;
 
 task_t* new_task();
 //task_t* clone_task(task_t* parent);
-unsigned int create_kernel_task(void (*func)(void));
 void task_print_info(task_t* t);
 
 #endif
