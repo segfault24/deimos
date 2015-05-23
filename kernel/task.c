@@ -33,7 +33,7 @@ static void setup_stack(task_t* t)
 {
 	// setup a stack and the corresponding registers
 	unsigned int* esp = kmalloc_a(STACK_SIZE) + STACK_SIZE;
-	unsigned int *stack = esp;
+	unsigned int* stack = esp;
 	
 	*--stack = 0x202;	// EFLAGS
 	*--stack = 0x08;	// CS
@@ -75,7 +75,7 @@ task_t* new_task()
 	// process info
 	t->pid = next_pid();
 	t->ppid = 0;
-	t->state = TASK_RUNNING;
+	t->state = TASK_STOPPED;
 	t->cpu_time = 0;
 	
 	// registers
@@ -90,6 +90,7 @@ task_t* new_task()
 	t->kernel_stack = (unsigned int)kmalloc_a(KERNEL_STACK_SIZE);
 	setup_stack(t);
 	
+	t->prev_task = 0;
 	t->next_task = 0;
 	
 	return t;
@@ -113,14 +114,4 @@ task_t* new_task()
 	return child;
 }*/
 
-unsigned int create_kernel_task(void (*func)(void))
-{
-	task_t* ktask = new_task();
 
-	ktask->ppid = get_idle_pid();
-	ktask->eip = (unsigned int)func;
-	
-	queue_task(ktask);
-	
-	return ktask->pid;
-}

@@ -24,19 +24,48 @@
 #include <kernel/task.h>
 #include <kernel/sched.h>
 
-extern unsigned int read_eip();
 extern page_directory_t* current_pd;
 
-unsigned int idle_pid = 0;
-task_t* cur_task = 0;
+static unsigned int idle_pid = 0;
+static task_t* cur_task = 0;
 int scheduling_enabled = 0;
+
+static void queue_task(task_t* t)
+{
+	t->next_task = cur_task->next_task;
+	t->prev_task = cur_task;
+	cur_task->next_task->prev_task = t;
+	cur_task->next_task = t;
+}
+
+/*static void dequeue_task(task_t* t)
+{
+	if(t == cur_task)
+		cur_task = t->next_task;
+	
+	t->prev_task->next_task = t->next_task;
+	t->next_task->prev_task = t->prev_task;
+	t->prev_task = 0;
+	t->next_task = 0;
+}*/
+
+static task_t* get_next_task()
+{
+	task_t* t = cur_task->next_task;
+	while(t != cur_task)
+	{
+		if(t->state == TASK_READY)
+			return t;
+		t = t->next_task;
+	}
+	
+	// if we somehow find no other task, resume the same task
+	return cur_task;
+}
 
 static void switch_task()
 {
-	int esp, ebp, eip;
-	
-	if(!cur_task)
-		return;
+	unsigned int esp, ebp, eip;
 	
 	disable_interrupts();
 	
@@ -44,21 +73,25 @@ static void switch_task()
 	esp = read_esp();
 	ebp = read_ebp();
 	
+	// eip=0x12345 means the task just resumed, so return
 	eip = read_eip();
 	if(eip == 0x12345)
+	{
+		printf("postswitch eip:%x esp:%x ebp:%x\n", read_eip(), read_esp(), read_ebp());
 		return;
+	}
 	
 	// save the current task's registers
 	cur_task->eip = eip;
 	cur_task->esp = esp;
 	cur_task->ebp = ebp;
 	
-	printf("\nsave: ");task_print_info(cur_task);
-	
 	// the next task becomes the current
-	cur_task = cur_task->next_task;
-	
-	printf("new: ");task_print_info(cur_task);
+	printf("\nsave: ");task_print_info(cur_task);
+	cur_task->state = TASK_READY;
+	cur_task = get_next_task();
+	cur_task->state = TASK_RUNNING;
+	printf(" new: ");task_print_info(cur_task);
 	
 	// load the next task's registers
 	eip = cur_task->eip;
@@ -94,16 +127,12 @@ static void idle_loop()
 			putchar('i');
 }
 
-void queue_task(task_t* t)
-{
-	t->next_task = cur_task->next_task;
-	cur_task->next_task = t;
-}
-
 void sched_init()
 {
 	// setup the first task and manually queue it to itself
 	cur_task = new_task();
+	cur_task->state = TASK_RUNNING;
+	cur_task->prev_task = cur_task;
 	cur_task->next_task = cur_task;
 	
 	// start the idle task
@@ -120,11 +149,6 @@ void do_scheduling(unsigned int ticks)
 		switch_task();
 }
 
-unsigned int get_idle_pid()
-{
-	return idle_pid;
-}
-
 void sched_print_info()
 {
 	task_t* t = cur_task;
@@ -135,6 +159,22 @@ void sched_print_info()
 		task_print_info(t);
 		t = t->next_task;
 	}
+}
+
+unsigned int create_kernel_task(void (*func)(void))
+{
+	task_t* ktask = new_task();
+	ktask->ppid = idle_pid;
+	ktask->eip = (unsigned int)func;
+	ktask->state = TASK_READY;
+	queue_task(ktask);
+	
+	return ktask->pid;
+}
+
+void sched_yield()
+{
+	switch_task();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
