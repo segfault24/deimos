@@ -47,7 +47,7 @@ drivers: $(DRIVEROBJS)
 iso: deimos.iso
 
 run: iso
-	qemu -cdrom deimos.iso -monitor stdio -device rtl8139
+	qemu-system-i386 -cdrom deimos.iso -monitor stdio -device rtl8139
 
 pxe: kernel
 	rm -rf ~/tftp_dir/*

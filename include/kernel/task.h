@@ -32,15 +32,17 @@
 typedef struct _task_t {
 	unsigned int pid, ppid, state, cpu_time;
 	page_directory_t* page_dir;
-	unsigned int kernel_stack;
+	unsigned int stack, kernel_stack;
 	unsigned int eip, esp, ebp;
 	
 	struct _task_t* prev_task;
 	struct _task_t* next_task;
 } task_t;
 
-task_t* new_task();
-//task_t* clone_task(task_t* parent);
 void task_print_info(task_t* t);
+
+task_t* new_task();
+void free_task();
+//task_t* clone_task(task_t* parent);
 
 #endif

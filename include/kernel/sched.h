@@ -22,10 +22,13 @@
 
 void sched_init();
 void sched_print_info();
+
 void do_scheduling(unsigned int ticks);
 unsigned int create_kernel_task(void (*func)(void));
-void sched_yield();
-//int kfork();
 
+void sched_yield();
+void sched_kill();
+
+//int kfork();
 
 #endif

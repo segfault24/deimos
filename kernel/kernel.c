@@ -53,5 +53,9 @@ void kmain(multiboot_info_t* mbt)
 	net_init(); // sets up the networking stack
 	vfs_init(); // virtual file system setup
 	
-	dsh_loop();
+	create_kernel_task(dsh_loop);
+	
+	// idle loop
+	while(1)
+		sched_yield();
 }
