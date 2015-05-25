@@ -63,7 +63,7 @@ void dsh_loop()
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
 		{
-			printf("clear | reboot | pci | mem | heap | int | disk\n");
+			printf("clear | reboot | pci | mem | heap | int | disk | sched\n");
 			printf("rtl <start|stop> | ata <start|stop> | arp <flush>\n");
 		}
 		else if(!strcmp(buf, "clear")) tty_clear();
@@ -73,16 +73,7 @@ void dsh_loop()
 		else if(!strcmp(buf, "heap")) heap_print_info();
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
-		
 		else if(!strcmp(buf, "sched")) sched_print_info();
-		else if(!strcmp(buf, "sched start"))
-		{
-			scheduling_enabled = 1;
-			unsigned int k = 0;
-			while(1)
-				if(k++%1000000 == 0)
-					putchar('d');
-		}
 		
 		//else if(!strcmp(buf, "net")) net_print_info();
 		//else if(!strcmp(buf, "ip")) ip_print_info();
@@ -96,8 +87,6 @@ void dsh_loop()
 		
 		else if(!strcmp(buf, ""));
 		else printf("invalid command \"%s\"\n", buf);
-		
-		
 	}
 	kfree(buf);
 }
