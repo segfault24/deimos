@@ -38,7 +38,7 @@ static void queue_task(task_t* t)
 	cur_task->next_task = t;
 }
 
-/*static void dequeue_task(task_t* t)
+static void dequeue_task(task_t* t)
 {
 	if(t == cur_task)
 		cur_task = t->next_task;
@@ -47,15 +47,25 @@ static void queue_task(task_t* t)
 	t->next_task->prev_task = t->prev_task;
 	t->prev_task = 0;
 	t->next_task = 0;
-}*/
+}
 
 static task_t* get_next_task()
 {
+	task_t* n;
 	task_t* t = cur_task->next_task;
 	while(t != cur_task)
 	{
-		if(t->state == TASK_READY)
-			return t;
+		switch(t->state)
+		{
+			case TASK_READY:
+				return t;
+			case TASK_DESTROY:
+				n = t->prev_task;
+				dequeue_task(t);
+				free_task(t);
+				t = n;
+				break;
+		}
 		t = t->next_task;
 	}
 	
@@ -76,10 +86,7 @@ static void switch_task()
 	// eip=0x12345 means the task just resumed, so return
 	eip = read_eip();
 	if(eip == 0x12345)
-	{
-		printf("postswitch eip:%x esp:%x ebp:%x\n", read_eip(), read_esp(), read_ebp());
 		return;
-	}
 	
 	// save the current task's registers
 	cur_task->eip = eip;
@@ -87,11 +94,9 @@ static void switch_task()
 	cur_task->ebp = ebp;
 	
 	// the next task becomes the current
-	printf("\nsave: ");task_print_info(cur_task);
 	cur_task->state = TASK_READY;
 	cur_task = get_next_task();
 	cur_task->state = TASK_RUNNING;
-	printf(" new: ");task_print_info(cur_task);
 	
 	// load the next task's registers
 	eip = cur_task->eip;
@@ -113,18 +118,10 @@ static void switch_task()
 		nop;					\
 		jmp *%%ecx"
 		: : "r" (eip), "r" (esp), "r" (ebp),
-		"r" (current_pd->phys));
+		"r" (current_pd->phys) : "ecx");
 	
 	// control shouldn't reach here
 	kpanic("sched: failed to execute context switch");
-}
-
-static void idle_loop()
-{
-	unsigned int i = 0;
-	while(1)
-		if(i++%1000000 == 0)
-			putchar('i');
 }
 
 void sched_init()
@@ -135,16 +132,14 @@ void sched_init()
 	cur_task->prev_task = cur_task;
 	cur_task->next_task = cur_task;
 	
-	// start the idle task
-	idle_pid = create_kernel_task(idle_loop);
-	
 	// start scheduling
-	scheduling_enabled = 0;
+	scheduling_enabled = 1;
 }
 
 void do_scheduling(unsigned int ticks)
 {
 	ticks++;//dummy
+	cur_task->cpu_time++;
 	if(scheduling_enabled)
 		switch_task();
 }
@@ -174,6 +169,12 @@ unsigned int create_kernel_task(void (*func)(void))
 
 void sched_yield()
 {
+	switch_task();
+}
+
+void sched_kill()
+{
+	cur_task->state = TASK_DESTROY;
 	switch_task();
 }
 

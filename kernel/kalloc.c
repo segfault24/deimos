@@ -184,7 +184,7 @@ void heap_print_info()
 	header_t* h = kheap;
 	while(h)
 	{
-		printf("%x-%x-%x %x %x %x, ", h->prev, h, h->next, h->magic, h->allocated, h->size); // for debugging
+		//printf("%x-%x-%x %x %x %x, ", h->prev, h, h->next, h->magic, h->allocated, h->size); // for debugging
 		if(h->allocated)
 			used += h->size;
 		else

@@ -34,6 +34,7 @@ static void setup_stack(task_t* t)
 	// setup a stack and the corresponding registers
 	unsigned int* esp = kmalloc_a(STACK_SIZE) + STACK_SIZE;
 	unsigned int* stack = esp;
+	t->stack = (unsigned int)esp;
 	
 	*--stack = 0x202;	// EFLAGS
 	*--stack = 0x08;	// CS
@@ -87,13 +88,18 @@ task_t* new_task()
 	t->page_dir = get_current_pd();
 	
 	// stacks
-	t->kernel_stack = (unsigned int)kmalloc_a(KERNEL_STACK_SIZE);
+	//t->kernel_stack = (unsigned int)kmalloc_a(KERNEL_STACK_SIZE);
 	setup_stack(t);
 	
 	t->prev_task = 0;
 	t->next_task = 0;
 	
 	return t;
+}
+
+void free_task(task_t* t)
+{
+	t++;//dummy
 }
 
 /*task_t* clone_task(task_t* parent)
