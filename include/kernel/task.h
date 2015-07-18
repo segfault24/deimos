@@ -29,8 +29,11 @@
 #define KERNEL_STACK_SIZE 0x2000
 #define STACK_SIZE 0x4000
 
+typedef unsigned int pid_t;
+
 typedef struct _task_t {
-	unsigned int pid, ppid, state, cpu_time;
+	pid_t pid, ppid;
+	unsigned int state, cpu_time;
 	page_directory_t* page_dir;
 	unsigned int stack, kernel_stack;
 	unsigned int eip, esp, ebp;

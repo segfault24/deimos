@@ -26,7 +26,6 @@
 
 extern page_directory_t* current_pd;
 
-static unsigned int idle_pid = 0;
 static task_t* cur_task = 0;
 int scheduling_enabled = 0;
 
@@ -40,13 +39,23 @@ static void queue_task(task_t* t)
 
 static void dequeue_task(task_t* t)
 {
-	if(t == cur_task)
-		cur_task = t->next_task;
-	
 	t->prev_task->next_task = t->next_task;
 	t->next_task->prev_task = t->prev_task;
 	t->prev_task = 0;
 	t->next_task = 0;
+}
+
+static task_t* find_task(pid_t pid)
+{
+	task_t* c = cur_task;
+	task_t* t = c->next_task;
+	while(t != c)
+	{
+		if(t->pid == pid)
+			return t;
+		t = t->next_task;
+	}
+	return 0;
 }
 
 static task_t* get_next_task()
@@ -94,7 +103,8 @@ static void switch_task()
 	cur_task->ebp = ebp;
 	
 	// the next task becomes the current
-	cur_task->state = TASK_READY;
+	if(cur_task->state != TASK_DESTROY)
+		cur_task->state = TASK_READY;
 	cur_task = get_next_task();
 	cur_task->state = TASK_RUNNING;
 	
@@ -156,15 +166,23 @@ void sched_print_info()
 	}
 }
 
-unsigned int create_kernel_task(void (*func)(void))
+pid_t create_kernel_task(void (*func)(void))
 {
 	task_t* ktask = new_task();
-	ktask->ppid = idle_pid;
+	ktask->ppid = 0;
 	ktask->eip = (unsigned int)func;
 	ktask->state = TASK_READY;
 	queue_task(ktask);
 	
 	return ktask->pid;
+}
+
+void kill(pid_t pid)
+{
+	task_t* t = find_task(pid);
+	if(!t)
+		return;
+	t->state = TASK_DESTROY;
 }
 
 void sched_yield()
