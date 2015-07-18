@@ -24,7 +24,9 @@ void sched_init();
 void sched_print_info();
 
 void do_scheduling(unsigned int ticks);
+
 unsigned int create_kernel_task(void (*func)(void));
+void kill(pid_t pid);
 
 void sched_yield();
 void sched_kill();

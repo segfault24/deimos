@@ -99,7 +99,8 @@ task_t* new_task()
 
 void free_task(task_t* t)
 {
-	t++;//dummy
+	kfree((void*)t->stack);
+	kfree((void*)t);
 }
 
 /*task_t* clone_task(task_t* parent)
