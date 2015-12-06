@@ -30,6 +30,7 @@
 #include <kernel/power.h>
 
 #include <i386/isr.h>
+#include <i386/pit.h>
 
 extern int rtl_module_init();
 extern int rtl_module_kill();
@@ -86,6 +87,8 @@ void dsh_loop()
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
 		else if(!strcmp(buf, "sched")) sched_print_info();
+		
+		else if(!strcmp(buf, "beep")) beep();
 		
 		else if(!strcmp(buf, "test")) testpid = create_kernel_task(test);
 		else if(!strcmp(buf, "kill")) kill(testpid);
