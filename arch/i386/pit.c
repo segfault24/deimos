@@ -38,7 +38,43 @@ void pit_init()
 	// set the reload value
 	outb(PIT_CH0_DATA, PIT_CH0_RLDL);
 	outb(PIT_CH0_DATA, PIT_CH0_RLDH);
-
+	
 	if(request_irq(0, (unsigned int)&ticks, &tmr_isr))
 		kpanic("could not register PIT interrupt handler");
+}
+
+static void pit_beep_start(uint32_t freq)
+{
+	// pc speaker timer configuration
+	outb(PIT_CMD, PIT_CH2_CFG);
+	// set the reload value
+	uint32_t reload = 1193182/freq;
+	outb(PIT_CH2_DATA, (uint8_t)reload);
+	outb(PIT_CH2_DATA, (uint8_t)(reload>>8));
+	
+	// attach the output of timer 2 to the speaker
+	outb(0x61, inb(0x61) | 0x03);
+}
+
+static void pit_beep_stop()
+{
+	// detach the output of timer 2 from the speaker
+	outb(0x61, inb(0x61) & !0x03);
+}
+
+void beep()
+{
+	// TODO: add timer, freq and duration selection
+	static int on = 0;
+	
+	if(!on)
+	{
+		pit_beep_start(2000);
+		on = 1;
+	}
+	else
+	{
+		pit_beep_stop();
+		on = 0;
+	}
 }

@@ -29,7 +29,10 @@
 #define PIT_CH0_RLDH 0xFF
 #define PIT_CH0_RLDL 0xFF
 
-//void pit_beep();
+// set channel 2 to mode 3 (square wave)
+#define PIT_CH2_CFG 0xB6
+
+void beep();
 
 void pit_init();
 
