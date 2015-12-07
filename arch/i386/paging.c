@@ -156,6 +156,8 @@ page_directory_t* clone_pd(page_directory_t* pd)
 // mapped what would be annoying
 virt_addr map_phys(phys_addr phys, size_t size)
 {
+	phys++;//dummy
+	size++;//dummy
 	// see if the physical frames are available
 	
 	// find open virtual space large enough
@@ -164,4 +166,5 @@ virt_addr map_phys(phys_addr phys, size_t size)
 	// map
 	
 	// return
+	return 0;
 }
