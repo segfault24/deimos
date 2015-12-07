@@ -112,6 +112,11 @@ void frame_init(multiboot_info_t* mbt)
 	reserve_region(KERNEL_PMA, KERNEL_SIZE);
 }
 
+phys_addr request_frame(phys_addr p)
+{
+	return 0; // TODO: this
+}
+
 phys_addr alloc_frame()
 {
 	size_t i, j, b;

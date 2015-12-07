@@ -106,6 +106,8 @@ page_directory_t* get_kernel_pd();
 page_directory_t* get_current_pd();
 page_directory_t* clone_pd(page_directory_t* pd);
 
+virt_addr map_phys(phys_addr phys, size_t size)
+
 phys_addr virt_to_phys(virt_addr v);
 
 void page_fault_handler(regs_t* regs);

@@ -150,3 +150,18 @@ page_directory_t* clone_pd(page_directory_t* pd)
 	
 	return pd;
 }
+
+// this implementation allows mapping of the same physical address
+// to multiple virtual addresses because tracking which subsystem
+// mapped what would be annoying
+virt_addr map_phys(phys_addr phys, size_t size)
+{
+	// see if the physical frames are available
+	
+	// find open virtual space large enough
+	//num_pages = size+1/4096
+	
+	// map
+	
+	// return
+}

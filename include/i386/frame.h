@@ -31,6 +31,10 @@
 // this establishes our available physical memory
 void frame_init(multiboot_info_t* mbt);
 
+// allows systems to request specific physical pages
+// returns the input if successful, 0 otherwise
+phys_addr request_frame(phys_addr p);
+
 // allocates a physical frame
 // returns 0 if there are none available
 phys_addr alloc_frame();
