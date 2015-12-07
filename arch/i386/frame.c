@@ -114,6 +114,7 @@ void frame_init(multiboot_info_t* mbt)
 
 phys_addr request_frame(phys_addr p)
 {
+	p++;//dummy
 	return 0; // TODO: this
 }
 
