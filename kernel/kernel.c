@@ -27,6 +27,7 @@
 #include <kernel/mm.h>
 #include <kernel/task.h>
 #include <kernel/sched.h>
+#include <kernel/acpi.h>
 #include <kernel/pci.h>
 #include <kernel/net.h>
 #include <kernel/vfs.h>
@@ -48,6 +49,8 @@ void kmain(multiboot_info_t* mbt)
 	arch_init(); // architecture unique stuff
 	mm_init(mbt); // memory management setup
 	sched_init(); // scheduling setup
+	
+	//acpi_init(); // acpi setup
 	
 	pci_init(); // scan the pci bus
 	net_init(); // sets up the networking stack
