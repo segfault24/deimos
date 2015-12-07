@@ -69,6 +69,8 @@ void dsh_loop()
 			c = putchar(getchar());
 			if(c == '\n')
 				break;
+			else if(c == '*') // reboot shortcut for testing
+				reboot();
 			buf[i] = c;
 			i++;
 		}
