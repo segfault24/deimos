@@ -15,6 +15,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
+#ifndef KERNEL_ACPI_H
+#define KERNEL_ACPI_H
 
 void acpi_init();
+
+#endif
