@@ -28,24 +28,58 @@
 
 typedef struct _header_t {
 	unsigned int magic;
-	size_t size;
+	size_t size; // includes header
 	int allocated;
 	struct _header_t* prev;
 	struct _header_t* next;
 } header_t;
 
-static header_t* kheap;
+static header_t* kheap = 0;
 
 // TODO: this. it'll eliminate duplicate logic
 // splits the given block s bytes in
 // returns pointer to the new block
-// s = block size (not alloc size!)
-//static header_t* split_hdr(header_t* h, size_t s)
-//{
-//	return 0;
-//}
+// returns 0 if it couldn't
+static header_t* split_block(header_t* h, size_t dist)
+{
+	header_t* new_h;
+	
+	// make sure the cut point places the new header within the existing block's data area
+	if(dist > h->size - sizeof(header_t) || dist < sizeof(header_t))
+		return 0;
+	
+	new_h = (void*)h + dist;
+	new_h->size = h->size - dist;
+	new_h->allocated = h->allocated;
+	new_h->magic = HEAP_MAGIC;
+	
+	// update the old block
+	h->size = dist;
+	
+	// insert the new block
+	if(h->next != 0)
+		h->next->prev = new_h;
+	new_h->next = h->next;
+	h->next = new_h;
+	new_h->prev = h;
+	
+	return new_h;
+}
 
 // TODO: need to be able to expand the heap when it fills
+
+// for debugs only
+static void dump_heap()
+{
+	header_t* h = kheap;
+	printf("kernel heap dump:\n");
+	while(h)
+	{
+		printf("%x %x,%x,%x %x-%x\t", h, h->magic, h->size, h->allocated, h->prev, h->next);
+		h = h->next;
+	}
+	printf("\n");
+}
 
 // only up to the first 4KiB of memory returned is
 // guaranteed to be contiguous in physical memory
@@ -54,11 +88,12 @@ static void* kmalloc_int(size_t size, int align)
 {
 	header_t* h;
 	header_t* new_h;
-	
-	heap_sanity_check(); // debug, remove this
+	header_t* back_h;
 	
 	if(size == 0)
 		return 0;
+	else
+		size += size%4; // round up to nearest 4 bytes
 	
 	if(!kheap)
 		kpanic("kmalloc: tried to allocate memory before heap initialization");
@@ -78,39 +113,22 @@ static void* kmalloc_int(size_t size, int align)
 				// get the nearest page aligned address
 				uint32_t aligned_addr = (uint32_t)((void*)h + 2*sizeof(header_t) + 0x0FFF) & 0xFFFFF000;
 				
+				// if the space before the align isnt big enough for a header, move on
+				if(aligned_addr - (uint32_t)h < sizeof(header_t))
+					continue;
 				// if the space after the align isn't big enough, move on
 				if(aligned_addr + size > (uint32_t)h + h->size)
 					continue;
 				
 				// create the new block at the aligned address
-				new_h = (void*)aligned_addr - sizeof(header_t);
-				new_h->size = (uint32_t)h + h->size - aligned_addr;
+				new_h = split_block(h, aligned_addr - (uint32_t)h - sizeof(header_t));
 				new_h->allocated = 1;
-				new_h->magic = HEAP_MAGIC;
-				// update the old block
-				h->size = aligned_addr - (uint32_t)h;
-				// insert the new block
-				if(h->next != 0)
-					h->next->prev = new_h;
-				new_h->next = h->next;
-				h->next = new_h;
-				new_h->prev = h;
 				
 				// chop off the excess?
-				if(new_h->size > size + sizeof(header_t))
+				if(new_h->size > size + 2*sizeof(header_t))
 				{
-					header_t* back_h = new_h + size + sizeof(header_t);
-					back_h->size = new_h->size - (size + sizeof(header_t));
+					back_h = split_block(new_h, sizeof(header_t) + size);
 					back_h->allocated = 0;
-					back_h->magic = HEAP_MAGIC;
-					
-					new_h->size = size + sizeof(header_t);
-					
-					if(new_h->next != 0)
-						new_h->next->prev = back_h;
-					back_h->next = new_h->next;
-					new_h->next = back_h;
-					back_h->prev = new_h;
 				}
 				
 				return (void*)new_h + sizeof(header_t);
@@ -128,20 +146,8 @@ static void* kmalloc_int(size_t size, int align)
 					// otherwise we just use the free block and reduce
 					// its size to match the request, then add a free
 					// block after it for the remainder of the space
-					new_h = (void*)h + size + sizeof(header_t);
-					new_h->size = h->size - (size + sizeof(header_t));
-					new_h->allocated = 0;
-					new_h->magic = HEAP_MAGIC;
-					
-					h->size = sizeof(header_t) + size;
+					new_h = split_block(h, sizeof(header_t) + size);
 					h->allocated = 1;
-					
-					// insert the new free block into the list
-					if(h->next != 0)
-						h->next->prev = new_h;
-					new_h->next = h->next;
-					h->next = new_h;
-					new_h->prev = h;
 				}
 				
 				return (void*)h + sizeof(header_t);
@@ -163,15 +169,39 @@ void kheap_init(void* start, size_t size)
 	kheap->magic = HEAP_MAGIC;
 	kheap->next = 0;
 	kheap->prev = 0;
+	
+	void* p[10];
+	
+	dump_heap();
+	p[0] = kmalloc(64);
+	p[1] = kmalloc(64);
+	p[2] = kmalloc(64);
+	p[3] = kmalloc(64);
+	dump_heap();
+	kfree(p[1]);
+	dump_heap();
+	kfree(p[2]);
+	dump_heap();
+	p[4] = kmalloc_a(400);
+	dump_heap();
 }
 
 void heap_sanity_check()
 {
 	header_t* h = kheap;
+	header_t* temp = 0;
 	while(h)
 	{
 		if(h->magic != HEAP_MAGIC)
 			kpanic("kheap: heap magic violated");
+		if(h->next && (uint32_t)h + h->size != (uint32_t)h->next) // remove this since heap may not be contiguous
+		{
+			printf(">>>>> %x + %x != %x\n", h, h->size, h->next);
+			kpanic("kheap: bad node size");
+		}
+		if(temp != h->prev)
+			kpanic("kheap: bad prev pointer");
+		temp = h;
 		h = h->next;
 	}
 }
@@ -184,7 +214,6 @@ void heap_print_info()
 	header_t* h = kheap;
 	while(h)
 	{
-		//printf("%x-%x-%x %x %x %x, ", h->prev, h, h->next, h->magic, h->allocated, h->size); // for debugging
 		if(h->allocated)
 			used += h->size;
 		else
@@ -201,7 +230,6 @@ void kfree(void* ptr)
 {
 	header_t* h;
 	
-	heap_sanity_check(); // debug, remove this
 	if(!ptr)
 		return;
 	
