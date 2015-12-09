@@ -69,7 +69,7 @@ static header_t* split_block(header_t* h, size_t dist)
 // TODO: need to be able to expand the heap when it fills
 
 // for debugs only
-static void dump_heap()
+/*static void dump_heap()
 {
 	header_t* h = kheap;
 	printf("kernel heap dump:\n");
@@ -79,7 +79,7 @@ static void dump_heap()
 		h = h->next;
 	}
 	printf("\n");
-}
+}*/
 
 // only up to the first 4KiB of memory returned is
 // guaranteed to be contiguous in physical memory
@@ -169,21 +169,6 @@ void kheap_init(void* start, size_t size)
 	kheap->magic = HEAP_MAGIC;
 	kheap->next = 0;
 	kheap->prev = 0;
-	
-	void* p[10];
-	
-	dump_heap();
-	p[0] = kmalloc(64);
-	p[1] = kmalloc(64);
-	p[2] = kmalloc(64);
-	p[3] = kmalloc(64);
-	dump_heap();
-	kfree(p[1]);
-	dump_heap();
-	kfree(p[2]);
-	dump_heap();
-	p[4] = kmalloc_a(400);
-	dump_heap();
 }
 
 void heap_sanity_check()
