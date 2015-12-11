@@ -29,12 +29,18 @@ static unsigned int next_pid()
 	return n_pid++;
 }
 
-static void setup_stack(task_t* t)
+static int setup_stack(task_t* t)
 {
+	unsigned int* esp;
+	unsigned int* stack;
+	
 	// setup a stack and the corresponding registers
-	unsigned int* esp = kmalloc_a(STACK_SIZE) + STACK_SIZE;
-	unsigned int* stack = esp;
-	t->stack = (unsigned int)esp;
+	t->stack = kmalloc_a(STACK_SIZE);
+	if(!t->stack)
+		return 0;
+	
+	esp = t->stack + STACK_SIZE;
+	stack = esp;
 	
 	*--stack = 0x202;	// EFLAGS
 	*--stack = 0x08;	// CS
@@ -55,23 +61,23 @@ static void setup_stack(task_t* t)
 	*--stack = 0x10;	// FS
 	*--stack = 0x10;	// GS
 	
-	*--stack = 0;//(unsigned int)&ring3_exit;
+	*--stack = (unsigned int)&sched_kill;//(unsigned int)&ring3_exit;
+	//*--stack = 0;
 	
 	t->esp = (unsigned int)stack;
 	t->ebp = (unsigned int)esp;
-}
-
-void task_print_info(task_t* t)
-{
-	printf("pid:%u ppid:%u state:%u cpu_time:%u eip:%x esp:%x ebp:%x\n",
-		t->pid, t->ppid, t->state, t->cpu_time, t->eip, t->esp, t->ebp);
-	//printf("  page_dir:%x kernel_stack:%x\n", t->page_dir, t->kernel_stack);
+	
+	return 1;
 }
 
 task_t* new_task()
 {
+	task_t* t;
+	
 	// allocate space for the process structures
-	task_t* t = kmalloc(sizeof(task_t));
+	t = kmalloc(sizeof(task_t));
+	if(!t)
+		return 0;
 	
 	// process info
 	t->pid = next_pid();
@@ -89,9 +95,12 @@ task_t* new_task()
 	
 	// stacks
 	//t->kernel_stack = (unsigned int)kmalloc_a(KERNEL_STACK_SIZE);
-	setup_stack(t);
+	if(!setup_stack(t))
+	{
+		kfree(t);
+		return 0;
+	}
 	
-	t->prev_task = 0;
 	t->next_task = 0;
 	
 	return t;
@@ -99,8 +108,8 @@ task_t* new_task()
 
 void free_task(task_t* t)
 {
-	kfree((void*)t->stack);
-	kfree((void*)t);
+	kfree(t->stack);
+	kfree(t);
 }
 
 /*task_t* clone_task(task_t* parent)

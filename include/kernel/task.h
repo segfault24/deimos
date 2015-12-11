@@ -35,14 +35,13 @@ typedef struct _task_t {
 	pid_t pid, ppid;
 	unsigned int state, cpu_time;
 	page_directory_t* page_dir;
-	unsigned int stack, kernel_stack;
+	unsigned int* stack;
+	unsigned int kernel_stack;
 	unsigned int eip, esp, ebp;
 	
-	struct _task_t* prev_task;
 	struct _task_t* next_task;
+	unsigned int sleep_ticks;
 } task_t;
-
-void task_print_info(task_t* t);
 
 task_t* new_task();
 void free_task();
