@@ -23,23 +23,37 @@
 #include <i386/isr.h>
 #include <i386/pit.h>
 
-static unsigned int ticks = 0;
+// IO ports for controlling PIT
+#define PIT_CH0_DATA 0x40
+#define PIT_CH2_DATA 0x42
+#define PIT_CMD 0x43
+
+// woo, constants
+#define PIT_BASE_FREQ 1193282
+
+// set channel 0 to mode 3 (square wave)
+#define PIT_CH0_CFG 0x36
+
+// set channel 2 to mode 3 (square wave)
+#define PIT_CH2_CFG 0xB6
 
 static void tmr_isr()
 {
-	ticks++;
-	do_scheduling(ticks);
+	do_scheduling();
 }
 
 void pit_init()
 {
 	// send our configuration
 	outb(PIT_CMD, PIT_CH0_CFG);
-	// set the reload value
-	outb(PIT_CH0_DATA, PIT_CH0_RLDL);
-	outb(PIT_CH0_DATA, PIT_CH0_RLDH);
 	
-	if(request_irq(0, (unsigned int)&ticks, &tmr_isr))
+	// calculate and set the reload value
+	uint32_t reload = PIT_BASE_FREQ/KERNEL_SCHED_HZ;
+	outb(PIT_CH0_DATA, (uint8_t)reload);
+	outb(PIT_CH0_DATA, (uint8_t)(reload>>8));
+	
+	// register the IRQ
+	if(request_irq(0, (unsigned int)pit_init, &tmr_isr))
 		kpanic("could not register PIT interrupt handler");
 }
 
@@ -47,8 +61,15 @@ static void pit_beep_start(uint32_t freq)
 {
 	// pc speaker timer configuration
 	outb(PIT_CMD, PIT_CH2_CFG);
+	
+	// apply our limits
+	if(freq<BEEP_MIN_FREQ)
+		freq = BEEP_MIN_FREQ;
+	if(freq>BEEP_MAX_FREQ)
+		freq = BEEP_MAX_FREQ;
+	
 	// set the reload value
-	uint32_t reload = 1193182/freq;
+	uint32_t reload = PIT_BASE_FREQ/freq;
 	outb(PIT_CH2_DATA, (uint8_t)reload);
 	outb(PIT_CH2_DATA, (uint8_t)(reload>>8));
 	
@@ -62,19 +83,9 @@ static void pit_beep_stop()
 	outb(0x61, inb(0x61) & !0x03);
 }
 
-void beep()
+void beep(unsigned int freq, unsigned int millis)
 {
-	// TODO: add timer, freq and duration selection
-	static int on = 0;
-	
-	if(!on)
-	{
-		pit_beep_start(2000);
-		on = 1;
-	}
-	else
-	{
-		pit_beep_stop();
-		on = 0;
-	}
+	pit_beep_start(freq);
+	sleep(millis);
+	pit_beep_stop();
 }
