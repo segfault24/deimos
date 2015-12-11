@@ -179,11 +179,11 @@ void heap_sanity_check()
 	{
 		if(h->magic != HEAP_MAGIC)
 			kpanic("kheap: heap magic violated");
-		if(h->next && (uint32_t)h + h->size != (uint32_t)h->next) // remove this since heap may not be contiguous
+		/*if(h->next && (uint32_t)h + h->size != (uint32_t)h->next) // remove this since heap may not be contiguous
 		{
 			printf(">>>>> %x + %x != %x\n", h, h->size, h->next);
 			kpanic("kheap: bad node size");
-		}
+		}*/
 		if(temp != h->prev)
 			kpanic("kheap: bad prev pointer");
 		temp = h;
