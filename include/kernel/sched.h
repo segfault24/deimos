@@ -20,16 +20,21 @@
 
 #include <kernel/task.h>
 
+#define KERNEL_SCHED_HZ 1000
+
 void sched_init();
 void sched_print_info();
 
-void do_scheduling(unsigned int ticks);
+void do_scheduling();
 
-unsigned int create_kernel_task(void (*func)(void));
+pid_t create_kernel_task(void (*func)(void));
 void kill(pid_t pid);
 
 void sched_yield();
 void sched_kill();
+
+unsigned int sleep(unsigned int seconds);
+int usleep(unsigned int millis);
 
 //int kfork();
 

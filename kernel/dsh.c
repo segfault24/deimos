@@ -28,6 +28,7 @@
 #include <kernel/disk.h>
 #include <kernel/arp.h>
 #include <kernel/power.h>
+#include <kernel/error.h>
 
 #include <i386/isr.h>
 #include <i386/pit.h>
@@ -36,18 +37,42 @@ extern int rtl_module_init();
 extern int rtl_module_kill();
 extern int ata_module_init();
 extern int ata_module_kill();
-extern int scheduling_enabled;
 
-static void test()
+static void task_test_loop()
 {
-	unsigned int i;
-	
-	while(1)
+	unsigned int i, j;
+	for(i=0; i<20000; i++)
+		for(j=0; j<20000; j++)
+			__asm__ volatile ("");
+}
+
+static void task_test()
+{
+	int i;
+	for(i=0; i<10; i++)
+		create_kernel_task(task_test_loop);
+}
+
+static void heap_test()
+{
+	int i, j;
+	void* ret[1000];
+	for(i=0; i<1000; i++)
 	{
-		i = 0;
-		while(i++<10000000);
-		putchar('t');
+		ret[i] = kmalloc_a(8192);
+		printf("%x ", ret[i]);
+		if(!ret[i])
+		{
+			printf("\nno more memory (%u allocs)\n", i);
+			for(j=0; j<i; j++)
+			{
+				printf("%x ", ret[j]);
+				kfree(ret[j]);
+			}
+			return;
+		}
 	}
+	printf("success\n");
 }
 
 void dsh_loop()
@@ -55,7 +80,6 @@ void dsh_loop()
 	char* buf;
 	char c;
 	int i;
-	pid_t testpid;
 	
 	printf("DeimOS (c)2015 Built on %s at %s\n", __DATE__, __TIME__);
 	
@@ -78,7 +102,7 @@ void dsh_loop()
 		
 		if(!strcmp(buf, "help") || !strcmp(buf, "?"))
 		{
-			printf("clear | reboot | pci | mem | heap | int | disk | sched\n");
+			printf("clear | reboot | pci | mem | heap | int | disk | sched | beep\n");
 			printf("rtl <start|stop> | ata <start|stop> | arp <flush>\n");
 		}
 		else if(!strcmp(buf, "clear")) tty_clear();
@@ -89,21 +113,20 @@ void dsh_loop()
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
 		else if(!strcmp(buf, "sched")) sched_print_info();
+		else if(!strcmp(buf, "beep")) beep(2000, 5000);
 		
-		else if(!strcmp(buf, "beep")) beep();
-		
-		else if(!strcmp(buf, "test")) testpid = create_kernel_task(test);
-		else if(!strcmp(buf, "kill")) kill(testpid);
+		else if(!strcmp(buf, "rtl start")) rtl_module_init();
+		else if(!strcmp(buf, "rtl stop")) rtl_module_kill();
+		else if(!strcmp(buf, "ata start")) ata_module_init();
+		else if(!strcmp(buf, "ata stop")) ata_module_kill();
 		
 		//else if(!strcmp(buf, "net")) net_print_info();
 		//else if(!strcmp(buf, "ip")) ip_print_info();
 		else if(!strcmp(buf, "arp")) arp_print_info();
 		else if(!strcmp(buf, "arp flush")) arp_flush();
 		
-		else if(!strcmp(buf, "rtl start")) rtl_module_init();
-		else if(!strcmp(buf, "rtl stop")) rtl_module_kill();
-		else if(!strcmp(buf, "ata start")) ata_module_init();
-		else if(!strcmp(buf, "ata stop")) ata_module_kill();
+		else if(!strcmp(buf, "test")) task_test();
+		else if(!strcmp(buf, "ht")) heap_test();
 		
 		else if(!strcmp(buf, ""));
 		else printf("invalid command \"%s\"\n", buf);
