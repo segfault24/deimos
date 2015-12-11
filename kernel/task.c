@@ -23,6 +23,7 @@
 #include <kernel/task.h>
 #include <kernel/sched.h>
 
+// TODO: check if PID is already in use
 static unsigned int n_pid = 0;
 static unsigned int next_pid()
 {

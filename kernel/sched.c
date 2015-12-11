@@ -26,61 +26,135 @@
 
 extern page_directory_t* current_pd;
 
-static task_t* cur_task = 0;
-int scheduling_enabled = 0;
+static task_t* ready_queue_head = 0;
+static task_t* ready_queue_tail = 0;
+static task_t* sleep_queue_head = 0;
+//static task_t* sleep_queue_tail = 0;
 
-static void queue_task(task_t* t)
-{
-	t->next_task = cur_task->next_task;
-	t->prev_task = cur_task;
-	cur_task->next_task->prev_task = t;
-	cur_task->next_task = t;
-}
+static task_t* running_task = 0;
+static int scheduling_enabled = 0;
+static unsigned int ticks = 0;
 
-static void dequeue_task(task_t* t)
-{
-	t->prev_task->next_task = t->next_task;
-	t->next_task->prev_task = t->prev_task;
-	t->prev_task = 0;
-	t->next_task = 0;
-}
-
+// 
 static task_t* find_task(pid_t pid)
 {
-	task_t* c = cur_task;
-	task_t* t = c->next_task;
-	while(t != c)
+	task_t* t;
+	
+	// check running
+	if(running_task->pid == pid)
+		return running_task;
+	
+	// check ready queue
+	t = ready_queue_head;
+	while(t)
 	{
 		if(t->pid == pid)
 			return t;
 		t = t->next_task;
 	}
-	return 0;
-}
-
-static task_t* get_next_task()
-{
-	task_t* n;
-	task_t* t = cur_task->next_task;
-	while(t != cur_task)
+	
+	// check sleep queue
+	t = sleep_queue_head;
+	while(t)
 	{
-		switch(t->state)
-		{
-			case TASK_READY:
-				return t;
-			case TASK_DESTROY:
-				n = t->prev_task;
-				dequeue_task(t);
-				free_task(t);
-				t = n;
-				break;
-		}
+		if(t->pid == pid)
+			return t;
 		t = t->next_task;
 	}
 	
-	// if we somehow find no other task, resume the same task
-	return cur_task;
+	return 0;
 }
+
+// 
+static void enqueue_ready_task(task_t* t)
+{
+	if(!ready_queue_head && !ready_queue_tail)
+	{
+		ready_queue_head = t;
+		ready_queue_tail = t;
+		return;
+	}
+	else
+	{
+		ready_queue_tail->next_task = t;
+		ready_queue_tail = t;
+	}
+}
+
+// 
+static task_t* get_next_ready_task()
+{
+	task_t* t = ready_queue_head;
+	
+	if(!ready_queue_head)
+	{
+		kpanic("sched: ready queue should never be empty!");
+	}
+	
+	if(ready_queue_head == ready_queue_tail)
+	{
+		ready_queue_head = 0;
+		ready_queue_tail = 0;
+	}
+	else
+	{
+		ready_queue_head = ready_queue_head->next_task;
+	}
+	
+	t->next_task = 0;
+	return t;
+}
+
+// the task's sleep_ticks should be it's total time to sleep
+// so we need to find where in the queue it should go and change
+// the sleep ticks to it's delta value
+/*static void enqueue_sleep_task(task_t* t)
+{
+	t++;//dummy
+}*/
+
+// returns head of sleep queue if its ready to run
+// basically, call this until it returns 0
+/*static task_t* dequeue_sleep_task()
+{
+	task_t* t = sleep_queue_head;
+	
+	if(t && t->sleep_ticks == 0)
+	{
+		sleep_queue_head = t->next_task;
+		if(!sleep_queue_head)
+			sleep_queue_tail = 0;
+		
+		t->next_task = 0;
+		return t;
+	}
+	else
+	{
+		return 0;
+	}
+}*/
+
+// updates head tick delta and moves ready tasks to ready queue
+/*static void update_sleep_queue()
+{
+	task_t* t;
+	
+	// decrement the sleep queue head's delta
+	if(sleep_queue_head)
+		sleep_queue_head->sleep_ticks--;
+	
+	// process the sleep queue
+	do
+	{
+		t = dequeue_sleep_task();
+		if(!t)
+		{
+			// task is ready for waking up
+			t->state = TASK_READY;
+			enqueue_ready_task(t);
+		}
+	} while(t);
+}*/
 
 static void switch_task()
 {
@@ -98,23 +172,56 @@ static void switch_task()
 		return;
 	
 	// save the current task's registers
-	cur_task->eip = eip;
-	cur_task->esp = esp;
-	cur_task->ebp = ebp;
+	running_task->eip = eip;
+	running_task->esp = esp;
+	running_task->ebp = ebp;
 	
-	// the next task becomes the current
-	if(cur_task->state != TASK_DESTROY)
-		cur_task->state = TASK_READY;
-	cur_task = get_next_task();
-	cur_task->state = TASK_RUNNING;
+	//////////////////////////////////////////
+	
+	// what do we do with the current task?
+	switch(running_task->state)
+	{
+		case TASK_RUNNING:
+			running_task->state = TASK_READY;
+			enqueue_ready_task(running_task);
+			break;
+		case TASK_DESTROY:
+			// it will be destroyed when it comes to the head of the queue
+			enqueue_ready_task(running_task);
+			break;
+		case TASK_SLEEPING:
+			// this task was just put to sleep
+			// its current sleep_ticks is total, not delta
+			//enqueue_sleep_task(running_task);
+			break;
+		default:
+			kpanic("sched: how did you reach here???");
+			break;
+	}
+	
+	// the next ready task becomes the current, and we
+	// destroy any tasks marked for destruction as we go
+	task_t* t;
+	running_task = 0;
+	do
+	{
+		t = get_next_ready_task();
+		if(t->state == TASK_DESTROY)
+			free_task(t);
+		else
+			running_task = t;
+	} while(!running_task);
+	running_task->state = TASK_RUNNING;
+	
+	//////////////////////////////////////////
 	
 	// load the next task's registers
-	eip = cur_task->eip;
-	esp = cur_task->esp;
-	ebp = cur_task->ebp;
+	eip = running_task->eip;
+	esp = running_task->esp;
+	ebp = running_task->ebp;
 	
 	// load the next process' page directory
-	current_pd = cur_task->page_dir;
+	current_pd = running_task->page_dir;
 	//switch_kernel_stack();
 	
 	// do the actual switch
@@ -134,45 +241,89 @@ static void switch_task()
 	kpanic("sched: failed to execute context switch");
 }
 
+static inline void print_task(task_t* t)
+{
+	printf("pid:%u ppid:%u state:%u cpu_time:%u eip:%x esp:%x ebp:%x\n",
+		t->pid, t->ppid, t->state, t->cpu_time, t->eip, t->esp, t->ebp);
+	//printf("  page_dir:%x kernel_stack:%x\n", t->page_dir, t->kernel_stack);
+}
+
 void sched_init()
 {
-	// setup the first task and manually queue it to itself
-	cur_task = new_task();
-	cur_task->state = TASK_RUNNING;
-	cur_task->prev_task = cur_task;
-	cur_task->next_task = cur_task;
+	// setup the first task (this becomes the idle task)
+	running_task = new_task();
+	running_task->state = TASK_RUNNING;
+	running_task->next_task = 0;
 	
 	// start scheduling
 	scheduling_enabled = 1;
 }
 
-void do_scheduling(unsigned int ticks)
-{
-	ticks++;//dummy
-	cur_task->cpu_time++;
-	if(scheduling_enabled)
-		switch_task();
-}
-
 void sched_print_info()
 {
-	task_t* t = cur_task;
-	task_print_info(t);
-	t = t->next_task;
-	while(t != cur_task)
+	task_t* t;
+	
+	if(scheduling_enabled)
+		printf("scheduler is running\n");
+	else
+		printf("scheduler is not running\n");
+	
+	// dump the running task
+	print_task(running_task);
+	
+	// dump the ready queue
+	t = ready_queue_head;
+	while(t && t!=running_task)
 	{
-		task_print_info(t);
+		print_task(t);
 		t = t->next_task;
+	}
+	
+	// dump the sleep queue
+	t = sleep_queue_head;
+	while(t)
+	{
+		print_task(t);
+		t = t->next_task;
+	}
+}
+
+// called by timer isr only
+// ticks and sleep queue stuff must be done here since
+// switch_task() can be called by sched_yield()
+void do_scheduling()
+{
+	ticks++;
+	
+	if(scheduling_enabled)
+	{
+		// update current task's cpu time counter
+		running_task->cpu_time++;
+		
+		// process the sleep queue
+		//update_sleep_queue();
+		
+		// go into main scheduling routine
+		switch_task();
 	}
 }
 
 pid_t create_kernel_task(void (*func)(void))
 {
-	task_t* ktask = new_task();
+	task_t* ktask;
+	
+	ktask = new_task();
+	if(!ktask)
+	{
+		kerror("sched: could not create new kernel task");
+		return 0;
+	}
 	ktask->ppid = 0;
 	ktask->eip = (unsigned int)func;
 	ktask->state = TASK_READY;
-	queue_task(ktask);
+	
+	// put it on the ready queue
+	enqueue_ready_task(ktask);
 	
 	return ktask->pid;
 }
@@ -192,8 +343,32 @@ void sched_yield()
 
 void sched_kill()
 {
-	cur_task->state = TASK_DESTROY;
+	running_task->state = TASK_DESTROY;
 	switch_task();
+}
+
+// TODO: SMP will fuck up the sleep queue design
+// TODO: actual POSIX return behavior on sleep functions
+unsigned int sleep(unsigned int seconds)
+{
+	running_task->sleep_ticks = KERNEL_SCHED_HZ*seconds;
+	running_task->state = TASK_SLEEPING;
+	switch_task();
+	
+	// TODO: need to re-enable interrupts?
+	
+	return 0;//dummy
+}
+
+int usleep(unsigned int millis)
+{
+	running_task->sleep_ticks = (KERNEL_SCHED_HZ*millis)/1000;
+	running_task->state = TASK_SLEEPING;
+	switch_task();
+	
+	// TODO: need to re-enable interrupts?
+	
+	return 0;//dummy
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +380,7 @@ void sched_kill()
 	
 	disable_interrupts();
 	
-	parent = cur_task;
+	parent = running_task;
 	
 	// allocate a new task struct
 	child = clone_task(parent);
@@ -214,7 +389,7 @@ void sched_kill()
 	
 	// both parent & child will start from here
 	//int eip = read_eip();
-	if(cur_task == parent)
+	if(running_task == parent)
 	{
 		// set child's pointers
 		//child->esp = read_esp();
