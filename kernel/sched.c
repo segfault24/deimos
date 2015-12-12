@@ -405,8 +405,6 @@ unsigned int sleep(unsigned int seconds)
 	running_task->state = TASK_SLEEPING;
 	switch_task();
 	
-	// TODO: need to re-enable interrupts?
-	
 	return 0;//dummy
 }
 
@@ -415,8 +413,6 @@ int usleep(unsigned int millis)
 	running_task->sleep_ticks = (KERNEL_SCHED_HZ*millis)/1000 + 1;
 	running_task->state = TASK_SLEEPING;
 	switch_task();
-	
-	// TODO: need to re-enable interrupts?
 	
 	return 0;//dummy
 }
