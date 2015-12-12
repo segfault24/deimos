@@ -103,6 +103,7 @@ task_t* new_task()
 	}
 	
 	t->next_task = 0;
+	t->sleep_ticks = 0;
 	
 	return t;
 }
