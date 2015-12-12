@@ -86,6 +86,6 @@ static void pit_beep_stop()
 void beep(unsigned int freq, unsigned int millis)
 {
 	pit_beep_start(freq);
-	sleep(millis);
+	usleep(millis);
 	pit_beep_stop();
 }

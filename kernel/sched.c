@@ -29,7 +29,7 @@ extern page_directory_t* current_pd;
 static task_t* ready_queue_head = 0;
 static task_t* ready_queue_tail = 0;
 static task_t* sleep_queue_head = 0;
-//static task_t* sleep_queue_tail = 0;
+static task_t* sleep_queue_tail = 0;
 
 static task_t* running_task = 0;
 static int scheduling_enabled = 0;
@@ -108,20 +108,66 @@ static task_t* get_next_ready_task()
 // the task's sleep_ticks should be it's total time to sleep
 // so we need to find where in the queue it should go and change
 // the sleep ticks to it's delta value
-/*static void enqueue_sleep_task(task_t* t)
+static void enqueue_sleep_task(task_t* y)
 {
-	t++;//dummy
-}*/
+	unsigned int sum, target_ticks;
+	task_t* x;
+	task_t* z;
+	
+	// if the queue's empty, just add it
+	if(!sleep_queue_head)
+	{
+		sleep_queue_head = y;
+		sleep_queue_tail = y;
+		y->next_task = 0;
+		return;
+	}
+	
+	// otherwise, loop until 'z' is the task after where 'y' needs
+	// to be inserted and 'sum' is the sum of ticks up through 'z'
+	sum = 0;
+	target_ticks = y->sleep_ticks;
+	x = 0;
+	z = sleep_queue_head;
+	while(z)
+	{
+		if(sum < target_ticks && sum+z->sleep_ticks > target_ticks)
+		{
+			// insert y between x and z
+			x->next_task = y;
+			y->next_task = z;
+			
+			// set deltas
+			y->sleep_ticks = target_ticks - sum;
+			z->sleep_ticks -= y->sleep_ticks;
+			return;
+		}
+		
+		sum += z->sleep_ticks;
+		x = z;
+		z = z->next_task;
+	}
+	
+	// if we get here, we reached the end of the queue, tack it on
+	sleep_queue_tail->next_task = y;
+	sleep_queue_tail = y;
+	y->next_task = 0;
+	y->sleep_ticks = target_ticks - sum;
+}
 
 // returns head of sleep queue if its ready to run
 // basically, call this until it returns 0
-/*static task_t* dequeue_sleep_task()
+static task_t* dequeue_sleep_task()
 {
 	task_t* t = sleep_queue_head;
 	
+	// if the head task is ready to be woken
 	if(t && t->sleep_ticks == 0)
 	{
+		// move the queue head
 		sleep_queue_head = t->next_task;
+		
+		// if that was the last task in the queue, update tail
 		if(!sleep_queue_head)
 			sleep_queue_tail = 0;
 		
@@ -132,10 +178,10 @@ static task_t* get_next_ready_task()
 	{
 		return 0;
 	}
-}*/
+}
 
 // updates head tick delta and moves ready tasks to ready queue
-/*static void update_sleep_queue()
+static void update_sleep_queue()
 {
 	task_t* t;
 	
@@ -147,15 +193,18 @@ static task_t* get_next_ready_task()
 	do
 	{
 		t = dequeue_sleep_task();
+		
+		// if no tasks are ready, return
 		if(!t)
-		{
-			// task is ready for waking up
-			t->state = TASK_READY;
-			enqueue_ready_task(t);
-		}
+			return;
+		
+		// wake up the task
+		t->state = TASK_READY;
+		enqueue_ready_task(t);
 	} while(t);
-}*/
+}
 
+// the main switching function
 static void switch_task()
 {
 	unsigned int esp, ebp, eip;
@@ -192,7 +241,7 @@ static void switch_task()
 		case TASK_SLEEPING:
 			// this task was just put to sleep
 			// its current sleep_ticks is total, not delta
-			//enqueue_sleep_task(running_task);
+			enqueue_sleep_task(running_task);
 			break;
 		default:
 			kpanic("sched: how did you reach here???");
@@ -243,9 +292,10 @@ static void switch_task()
 
 static inline void print_task(task_t* t)
 {
-	printf("pid:%u ppid:%u state:%u cpu_time:%u eip:%x esp:%x ebp:%x\n",
-		t->pid, t->ppid, t->state, t->cpu_time, t->eip, t->esp, t->ebp);
-	//printf("  page_dir:%x kernel_stack:%x\n", t->page_dir, t->kernel_stack);
+	printf("pid:%u ppid:%u state:%u cpu_time:%u sleep:%u ", t->pid, t->ppid, t->state, t->cpu_time, t->sleep_ticks);
+	//printf("eip:%x esp:%x ebp:%x ", t->eip, t->esp, t->ebp);
+	//printf(" page_dir:%x kernel_stack:%x", t->page_dir, t->kernel_stack);
+	printf("\n");
 }
 
 void sched_init()
@@ -301,7 +351,7 @@ void do_scheduling()
 		running_task->cpu_time++;
 		
 		// process the sleep queue
-		//update_sleep_queue();
+		update_sleep_queue();
 		
 		// go into main scheduling routine
 		switch_task();
@@ -351,7 +401,7 @@ void sched_kill()
 // TODO: actual POSIX return behavior on sleep functions
 unsigned int sleep(unsigned int seconds)
 {
-	running_task->sleep_ticks = KERNEL_SCHED_HZ*seconds;
+	running_task->sleep_ticks = KERNEL_SCHED_HZ*seconds + 1;
 	running_task->state = TASK_SLEEPING;
 	switch_task();
 	
@@ -362,7 +412,7 @@ unsigned int sleep(unsigned int seconds)
 
 int usleep(unsigned int millis)
 {
-	running_task->sleep_ticks = (KERNEL_SCHED_HZ*millis)/1000;
+	running_task->sleep_ticks = (KERNEL_SCHED_HZ*millis)/1000 + 1;
 	running_task->state = TASK_SLEEPING;
 	switch_task();
 	

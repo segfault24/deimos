@@ -113,7 +113,7 @@ void dsh_loop()
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
 		else if(!strcmp(buf, "sched")) sched_print_info();
-		else if(!strcmp(buf, "beep")) beep(2000, 5000);
+		else if(!strcmp(buf, "beep")) beep(2000, 1000);
 		
 		else if(!strcmp(buf, "rtl start")) rtl_module_init();
 		else if(!strcmp(buf, "rtl stop")) rtl_module_kill();
@@ -125,8 +125,9 @@ void dsh_loop()
 		else if(!strcmp(buf, "arp")) arp_print_info();
 		else if(!strcmp(buf, "arp flush")) arp_flush();
 		
-		else if(!strcmp(buf, "test")) task_test();
-		else if(!strcmp(buf, "ht")) heap_test();
+		// test functions
+		else if(!strcmp(buf, "tasktest")) task_test();
+		else if(!strcmp(buf, "heaptest")) heap_test();
 		
 		else if(!strcmp(buf, ""));
 		else printf("invalid command \"%s\"\n", buf);
