@@ -20,29 +20,26 @@
 // TODO: extensively document this
 // https://stackoverflow.com/questions/6935442/x86-spinlock-using-cmpxchg
 
-void spin_lock(spinlock_t lock)
+void spin_lock(spinlock_t* lock)
 {
-	lock++;//dummy
-}
-
-void spin_unlock(volatile spinlock_t lock)
-{
-	lock++;//dummy
-}
-
-void spin_lock_save(spinlock_t lock, int flags)
-{
-	lock++;flags++;//dummy
-	/*while(!__sync_bool_compare_and_swap(lock, 0, 1))
+	while(!__sync_bool_compare_and_swap(&lock->lockval, 0, 1))
 	{
-		while(*lock); // __mm_pause();
-	}*/
+		while((volatile int)lock->lockval);
+	}
 }
 
-void spin_unlock_restore(volatile spinlock_t lock, int flags)
+void spin_unlock(spinlock_t* lock)
+{
+	__sync_synchronize(); // full memory barrier
+	lock->lockval = 0;
+}
+
+void spin_lock_save(spinlock_t* lock, int flags)
 {
 	lock++;flags++;//dummy
-	// __sync_synchronize() ?
-	/*__asm__ volatile (""); // memory barrier
-	*lock = 0;*/
+}
+
+void spin_unlock_restore(spinlock_t* lock, int flags)
+{
+	lock++;flags++;//dummy
 }
