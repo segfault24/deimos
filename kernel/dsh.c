@@ -43,13 +43,13 @@ static void task_test_loop()
 	unsigned int i, j;
 	for(i=0; i<20000; i++)
 		for(j=0; j<20000; j++)
-			__asm__ volatile ("");
+			__asm__ volatile ("nop");
 }
 
 static void task_test()
 {
 	int i;
-	for(i=0; i<10; i++)
+	for(i=0; i<100; i++)
 		create_kernel_task(task_test_loop);
 }
 
@@ -113,7 +113,7 @@ void dsh_loop()
 		else if(!strcmp(buf, "int")) interrupts_print_info();
 		else if(!strcmp(buf, "disk")) disk_print_info();
 		else if(!strcmp(buf, "sched")) sched_print_info();
-		else if(!strcmp(buf, "beep")) beep(2000, 1000);
+		else if(!strcmp(buf, "beep")) beep(2000, 100);
 		
 		else if(!strcmp(buf, "rtl start")) rtl_module_init();
 		else if(!strcmp(buf, "rtl stop")) rtl_module_kill();
