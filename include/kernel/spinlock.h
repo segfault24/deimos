@@ -25,10 +25,10 @@ typedef struct {
 #define SPINLOCK_UNLOCKED {0}
 #define SPINLCOK_LOCKED {1}
 
-void spin_lock(spinlock_t lock);
-void spin_unlock(spinlock_t lock);
+void spin_lock(spinlock_t* lock);
+void spin_unlock(spinlock_t* lock);
 
-void spin_lock_save(spinlock_t lock, int flags);
-void spin_unlock_restore(spinlock_t lock, int flags);
+void spin_lock_save(spinlock_t* lock, int flags);
+void spin_unlock_restore(spinlock_t* lock, int flags);
 
 #endif
