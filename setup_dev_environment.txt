@@ -15,7 +15,7 @@ sudo apt-get upgrade
 sudo apt-get install\
 linux-headers sudo gcc g++ make gdb valgrind git\
 bison flex libgmp-dev libmpfr-dev libmpc-dev\
-qemu grub tftpd-hpa tftp-hpa udhcpd
+qemu grub xorriso tftpd-hpa tftp-hpa udhcpd
 
 ######################
 # fuck virtualbox, just mount the smb share as below
