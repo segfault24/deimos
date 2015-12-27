@@ -31,23 +31,22 @@ _all: default
 deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(ARCHDIR)/kernel.ld
 	$(CC) -T $(ARCHDIR)/kernel.ld -o $@ $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(CFLAGS) $(LDFLAGS)
 
-# create a bootable CD iso
-deimos.iso: deimos.bin
-	mkdir -p isodir/boot/grub
-	cp $< isodir/boot/$<
-	cp grub.cfg isodir/boot/grub/grub.cfg
-	grub-mkrescue -o $@ isodir
-	rm -rf isodir
-
 ########################
 # actual targets
 default: kernel drivers
 kernel: deimos.bin
 drivers: $(DRIVEROBJS)
-iso: deimos.iso
 
-run: iso
-	qemu-system-i386 -cdrom deimos.iso -monitor stdio -device rtl8139
+iso: kernel
+	mkdir -p isodir/boot/grub
+	cp deimos.bin isodir/boot/deimos.bin
+	cp grub.cfg isodir/boot/grub/grub.cfg
+	grub-mkrescue -o deimos.iso isodir
+	rm -rf isodir
+
+run: kernel
+	qemu-system-i386 -kernel deimos.bin -monitor stdio -device rtl8139
+	#qemu-system-i386 -cdrom deimos.iso -monitor stdio -device rtl8139
 
 pxe: kernel
 	rm -rf ~/tftp_dir/*
