@@ -1,11 +1,11 @@
-#!/bin/bash
-#test123
+#!/bin/sh
 
 ARCH=i386
 ARCHDIR=arch/$(ARCH)
+GCCDIR=$(HOME)/cross
 
 # compiler and linker locations & options
-CC=/home/austin/opt/cross/bin/i686-elf-gcc
+CC=$(GCCDIR)/bin/i686-elf-gcc
 CFLAGS=-g -ffreestanding -fno-builtin -Wall -Werror -Wextra -Iinclude
 LDFLAGS=-nostdlib -lgcc
 
@@ -16,8 +16,8 @@ include kernel/make.config
 #DRIVERS
 include drivers/make.config
 
-# dummy default target (see below)
-_all: default
+# default target
+all: kernel drivers
 
 ########################
 # generic compile rules
@@ -33,7 +33,6 @@ deimos.bin: $(ARCHOBJS) $(KERNELOBJS) $(DRIVEROBJS) $(ARCHDIR)/kernel.ld
 
 ########################
 # actual targets
-default: kernel drivers
 kernel: deimos.bin
 drivers: $(DRIVEROBJS)
 
@@ -42,22 +41,22 @@ iso: kernel
 	cp deimos.bin isodir/boot/deimos.bin
 	cp grub.cfg isodir/boot/grub/grub.cfg
 	grub-mkrescue -o deimos.iso isodir
-	rm -rf isodir
 
 run: kernel
 	qemu-system-i386 -kernel deimos.bin -monitor stdio -device rtl8139
-	#qemu-system-i386 -cdrom deimos.iso -monitor stdio -device rtl8139
 
 pxe: kernel
-	rm -rf ~/tftp_dir/*
-	grub-mknetdir --net-directory=/home/austin/tftp_dir/
-	cp deimos.bin ~/tftp_dir/boot
-	cp grub.cfg ~/tftp_dir/boot/grub/
-	chmod -R 777 ~/tftp_dir/*
+	rm -rf tftpdir/*
+	mkdir -p tftpdir
+	grub-mknetdir --net-directory=tftpdir
+	cp deimos.bin tftpdir/boot/
+	cp grub.cfg tftpdir/boot/grub/
+	chmod -R 777 tftpdir/*
 
 clean:
-	rm -rfv ~/tftp_dir/*
-	rm -fv *.o */*.o */*/*.o deimos.bin deimos.iso
+	rm -rfv tftpdir isodir
+	rm -fv deimos.bin deimos.iso
+	find . -type f -name '*.o' -delete
 
-.PHONY: all kernel iso run clean
+.PHONY: all kernel iso run pxe clean
 

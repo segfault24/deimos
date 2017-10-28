@@ -1,4 +1,5 @@
-refdocs/
+isodir/
+tftpdir/
 
 # Object files
 *.o
