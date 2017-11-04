@@ -8,9 +8,9 @@ export BVER=2.27
 ### gcc version ###
 export GVER=4.9.4
 ### build working directory ###
-export BUILDTEMP="$HOME/build-cross"
+export BUILDTEMP="/opt/build-cross"
 ### cross compiler output location ##
-export PREFIX="$HOME/cross"
+export PREFIX="/opt/cross"
 
 ### install everything ###
 sudo apt-get install \

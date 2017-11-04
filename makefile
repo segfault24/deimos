@@ -2,7 +2,7 @@
 
 ARCH=i386
 ARCHDIR=arch/$(ARCH)
-GCCDIR=$(HOME)/cross
+GCCDIR=/opt/cross
 
 # compiler and linker locations & options
 CC=$(GCCDIR)/bin/i686-elf-gcc
